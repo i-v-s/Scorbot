@@ -1,3 +1,13 @@
+*.out
+*.o
+*.bin
+*.map
+*.bak
+*.pbi
+*.pbd
+*.cout
+*.hex
+
 # Windows image file caches
 Thumbs.db
 ehthumbs.db
