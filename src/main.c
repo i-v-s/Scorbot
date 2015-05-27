@@ -18,9 +18,11 @@
 #include "usb_lib.h"
 #include "usb_desc.h"
 #include "usb_pwr.h"
+#include "parser.h"
 #include <stm32f30x_tim.h>
 //#include <misc.h>
 #include "mx_gpio.h"
+#include "host_io.h"
 
 // константы для счета энкодеров
 //#define CORRECT1         (5)  /*<! константа для коррекции данных энкодера 1 (платформа) */
@@ -40,31 +42,11 @@ uint8_t monit = 0;//анализ номера энкодера
 uint8_t nozero = 1;
 
 //enc_prg
-	uint8_t EncState1; //предыдущее состояние энкодера
-	uint16_t EncData1 = 1;	//счетный регистр энкодера
-	uint8_t EncState2; 
-	uint16_t EncData2 = 1;	
-	uint8_t EncState3; 
-	uint16_t EncData3 = 1;
-	uint8_t EncState4; 
-	uint16_t EncData4 = 1;
-	uint8_t EncState5;
-	uint16_t EncData5 = 1;
-	uint8_t EncState6; 
-	uint16_t EncData6 = 1;
+	uint8_t EncState[6]; //предыдущее состояние энкодера
+	uint16_t encData[6] = {1, 1, 1, 1, 1, 1};	//счетный регистр энкодера
 	
-	uint8_t rab1 = 0;
-	uint8_t rab2 = 0;
-	uint8_t rab3 = 0;
-	uint8_t rab4 = 0;
-	uint8_t rab5 = 0;
-	uint8_t rab6 = 0;
-	uint16_t e1 = 0;
-	uint16_t e2 = 0;
-	uint16_t e3 = 0;
-	uint16_t e4 = 0;
-	uint16_t e5 = 0;
-	uint16_t e6 = 0;
+    uint8_t rab[6] = {0};
+    uint16_t e[6] = {0};
 	
 	uint8_t mail = 0;
 	uint8_t fll = 1; // и это..
@@ -237,8 +219,14 @@ void timer_CheckEncoder(void)//функция для проверки энкодеров
 	if (diff < 0) {GPIOE->BSRR = GPIO_Pin_14; GPIOE->BRR = GPIO_Pin_8; GPIOE->BRR = GPIO_Pin_15;}
 }
 */
+
 int main(void)
 {
+    /*char t[] = "ptp a20 save 70 ptp B 34  ;";
+    const char * er = parse(t, t + sizeof(t));
+    
+    if(er) printf(er);*/
+    
     Set_System();
     Set_USBClock();
     USB_Interrupts_Config();
@@ -247,28 +235,28 @@ int main(void)
 
     while (1)
     {
-		if (nozero)
+		/*if (nozero)
 		{
 			zero(); 
 			zero();
 			zero();
 			nozero = 0;
-		}
+		}*/
 
 		//считаем энкодеры
-	EncPlatform();
-	Enc2();
-	Enc3();
-	Enc4();
-	Enc5();
-	EncClaw();
+        EncPlatform();
+        Enc2();
+        Enc3();
+        Enc4();
+        Enc5();
+        EncClaw();
 
-	if (((EncData1 >> 6) & 0xFF) > 250) {EncData1 += (1<<6);}
-	if (((EncData2 >> 5) & 0xFF) > 250) {EncData2 += (1<<5);}
-	if (((EncData3 >> 6) & 0xFF) > 250) {EncData3 += (1<<6);}
-	if (((EncData4 >> 4) & 0xFF) > 250) {EncData4 += (1<<4);}
-	if (((EncData5 >> 5) & 0xFF) > 250) {EncData5 += (1<<5);}
-	if (((EncData6 >> 2) & 0xFF) > 250) {EncData6 += (1<<2);}
+        if (((encData[0] >> 6) & 0xFF) > 250) {encData[0] += (1<<6);}
+        if (((encData[1] >> 5) & 0xFF) > 250) {encData[1] += (1<<5);}
+        if (((encData[2] >> 6) & 0xFF) > 250) {encData[2] += (1<<6);}
+        if (((encData[3] >> 4) & 0xFF) > 250) {encData[3] += (1<<4);}
+        if (((encData[4] >> 5) & 0xFF) > 250) {encData[4] += (1<<5);}
+        if (((encData[5] >> 2) & 0xFF) > 250) {encData[5] += (1<<2);}
 				/*отправляем данные о положении энкодера
 		if (Receive_Buffer[0] == 1)
 		{
@@ -278,322 +266,276 @@ int main(void)
 				monit = monit/10;
 			}//если в обратную сторону, то делим на 10 (44/4=4 -- энкодер #4)
 		}	*/			
-		//ОБРАБОТКА
-//if (!error)	//если нет ошибки
-//	{	
-		if (rab1)
+		if (rab[0])
 		{
-			temp8 = ((EncData1>>6) & 0xFF);
-			//if ((temp8 > 205) || (e1 > 205))
+			temp8 = ((encData[0] >> 6) & 0xFF);
+			//if ((temp8 > 205) || (e[0] > 205))
 			//	{
 			//		error = 1;
 			//	}
-			if(e1 > temp8)
+			if(e[0] > temp8)
 			{
 				platform (1);
 			}
-			if (e1 < temp8)
+			if (e[0] < temp8)
 			{
 				platform(2);
 			}
-			if (e1 == temp8)
+			if (e[0] == temp8)
 			{
 				platform(0);
-				rab1 = 0;
+				rab[0] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				platform(0);
-				rab1 = 0;
+				rab[0] = 0;
 				error = 0;
 			}
 		}
 
-		if (rab2)
+		if (rab[1])
 		{
-			temp8 = ((EncData2>>5) & 0xFF);
-			//if ((temp8 > 205) || (e2 > 205))//уточнить!!
+			temp8 = ((encData[1] >> 5) & 0xFF);
+			//if ((temp8 > 205) || (e[1] > 205))//уточнить!!
 			//	{
 			//		error = 1;
 			//	}
-			if(e2 > temp8)
+			if(e[1] > temp8)
 			{
 				axis2(2);
 			}
-			if (e2 < temp8)
+			if (e[1] < temp8)
 			{
 				axis2(1);
 			}
-			if (e2 == temp8)
+			if (e[1] == temp8)
 			{
 				axis2(0);
-				rab2 = 0;
+				rab[1] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				axis2(0);
-				rab2 = 0;
+				rab[1] = 0;
 				error = 0;
 			}
 		}
 
-		if (rab3)
+		if (rab[2])
 		{
-			temp8 = ((EncData3>>6) & 0xFF);
-			//if ((temp8 > 100) || (e3 > 100))
+			temp8 = ((encData[2]>>6) & 0xFF);
+			//if ((temp8 > 100) || (e[2] > 100))
 			//	{
 			//		error = 1;
 			//	}
-			if(e3 > temp8)
+			if(e[2] > temp8)
 			{
 				axis3(1);
 			}
-			if (e3 < temp8)
+			if (e[2] < temp8)
 			{
 				axis3(2);
 			}
-			if (e3 == temp8)
+			if (e[2] == temp8)
 			{
 				axis3(0);
-				rab3 = 0;
+				rab[2] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				axis3(0);
-				rab3 = 0;
+				rab[2] = 0;
 				error = 0;
 			}
 		}
 
-		if (rab4)
+		if (rab[3])
 		{
-			temp8 = ((EncData4>>4) & 0xFF);
-			//if ((temp8 > 95) || (e4 > 95))
+			temp8 = ((encData[3]>>4) & 0xFF);
+			//if ((temp8 > 95) || (e[3] > 95))
 			//	{
 			//		error = 1;
 			//	}
-			if(e4 > temp8)
+			if(e[3] > temp8)
 			{
 				axis4(1);
 			}
-			if (e4 < temp8)
+			if (e[3] < temp8)
 			{
 				axis4(2);
 			}
-			if (e4 == temp8)
+			if (e[3] == temp8)
 			{
 				axis4(0);
-				rab4 = 0;
+				rab[3] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				axis4(0);
-				rab4 = 0;
+				rab[3] = 0;
 				error = 0;
 			}
 		}
 
-		if (rab5)
+		if (rab[4])
 		{
-			temp8 = ((EncData5>>5) & 0xFF);
-			//if ((temp8 > 100) || (e5 > 100))
+			temp8 = ((encData[4]>>5) & 0xFF);
+			//if ((temp8 > 100) || (e[4] > 100))
 			//	{
 			//		error = 1;
 			//	}
-			if(e5 > temp8)
+			if(e[4] > temp8)
 			{
 				axis5(1);
 			}
-			if (e5 < temp8)
+			if (e[4] < temp8)
 			{
 				axis5(2);
 			}
-			if (e5 == temp8)
+			if (e[4] == temp8)
 			{
 				axis5(0);
-				rab5 = 0;
+				rab[4] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				axis5(0);
-				rab5 = 0;
+				rab[4] = 0;
 				error = 0;
 			}
 		}
 
-		if (rab6)
+		if (rab[5])
 		{
-			temp8 = ((EncData6>>2) & 0xFF);
-			//if ((temp8 > 200) || (e6 > 200))
+			temp8 = ((encData[5]>>2) & 0xFF);
+			//if ((temp8 > 200) || (e[5] > 200))
 			//	{
 			//		error = 1;
 			//	}
-			if(e6 > temp8)
+			if(e[5] > temp8)
 			{
 				claw(2);//закрываем
 			}
-			if (e6 < temp8)
+			if (e[5] < temp8)
 			{
 				claw(1);//открываем
 			}
-			if (e6 == temp8)
+			if (e[5] == temp8)
 			{
 				claw(0);
-				rab6 = 0;
+				rab[5] = 0;
 			}
 			if (error) //Обработка ошибки!!!
 			{
 				claw(0);
-				rab6 = 0;
+				rab[5] = 0;
 				error = 0;
 			}
 		}
-
-							//--debug--	
-						//	Send_Buffer[0] = (EncData2>>6);//((EncData6>>7) & 0xFF);
-						//	Send_Buffer[2] = e6;
-						//	Send_Buffer[3] = monit;
-							//---------
-						/*	temp8 = ((EncData1 >> 6) & 0xFF);
-							if (e1 > ((EncData1 >> 6) & 0xFF))
-								{
-									platform(1);
-								}
-							else 
-								{
-									platform(0);
-									rab1 = 0;
-									flg1 = 0;
-								}
-						*/	
-		
-	//	Receive_Buffer[0] = 0;
-	//	Receive_Buffer[1] = 0;
-	//	Receive_Buffer[2] = 0;
-	//	Receive_Buffer[3] = 0;
-		
-		
-	/*	
-					
-	*/	
-				/* выявление активных двигателей
-											1: C_10;
-											2: B_4;
-											3: D_0;
-											4: D_3 || D_6;
-											5: D_6 || D_3;
-											6: C_9; 
-				
-		m1 = GPIO_ReadOutputDataBit(GPIOC, GPIO_Pin_10);
-		m2 = GPIO_ReadOutputDataBit(GPIOB, GPIO_Pin_4);
-		m3 = GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_0);
-		m4 = GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_3);
-		m5 = GPIO_ReadOutputDataBit(GPIOD, GPIO_Pin_6);
-		m6 = GPIO_ReadOutputDataBit(GPIOC, GPIO_Pin_9);
-*/
 									
 		switch (flag)
 				{
 				case 0: 
 								flag = 1;
-								data1_one = ((EncData1>>6) & 0xFF);
-								data2_one = ((EncData2>>5) & 0xFF);
-								data3_one = ((EncData3>>6) & 0xFF);
-								data4_one = ((EncData4>>4) & 0xFF);
-								data5_one = ((EncData5>>5) & 0xFF);
-								data6_one = ((EncData6>>2) & 0xFF);
+								data1_one = ((encData[0]>>6) & 0xFF);
+								data2_one = ((encData[1]>>5) & 0xFF);
+								data3_one = ((encData[2]>>6) & 0xFF);
+								data4_one = ((encData[3]>>4) & 0xFF);
+								data5_one = ((encData[4]>>5) & 0xFF);
+								data6_one = ((encData[5]>>2) & 0xFF);
 								break;
 				case 1:
 								if (cnt_base > 50000)
 									{
 										cnt_base = 0;
 										flag = 0;
-										if (rab1)
+										if (rab[0])
 										{
-											temp8 = ((EncData1>>6) & 0xFF);
-											if (e1 != temp8)
+											temp8 = ((encData[0]>>6) & 0xFF);
+											if (e[0] != temp8)
 											{
-											if (data1_one == ((EncData1>>6) & 0xFF))
+											if (data1_one == ((encData[0]>>6) & 0xFF))
 												{
 													platform(0);
 													error = 1;
 													//flag = 0;
-													rab1 = 0;
+													rab[0] = 0;
 												}
 											}
 										}
 
-										if (rab2)
+										if (rab[1])
 										{
-											temp8 = ((EncData2>>5) & 0xFF);
-											if (e2 != temp8)
+											temp8 = ((encData[1]>>5) & 0xFF);
+											if (e[1] != temp8)
 											{
-											if (data2_one == ((EncData2>>5) & 0xFF))
+											if (data2_one == ((encData[1]>>5) & 0xFF))
 												{
 													axis2(0);
 													error = 1;
 													//flag = 0;
-													rab2 = 0;
+													rab[1] = 0;
 												}
 											}
 										}
 
-										if (rab3)
+										if (rab[2])
 										{
-											temp8 = ((EncData3>>6) & 0xFF);
-											if (e3 != temp8)
+											temp8 = ((encData[2]>>6) & 0xFF);
+											if (e[2] != temp8)
 											{
-											if (data3_one == ((EncData3>>6) & 0xFF))
+											if (data3_one == ((encData[2]>>6) & 0xFF))
 												{
 													axis3(0);
 													error = 1;
 													//flag = 0;
-													rab3 = 0;
+													rab[2] = 0;
 												}
 											}
 										}
 
-										if (rab4)
+										if (rab[3])
 										{
-											temp8 = ((EncData4>>4) & 0xFF);
-											if (e4 != temp8)
+											temp8 = ((encData[3]>>4) & 0xFF);
+											if (e[3] != temp8)
 											{
-											if (data4_one == ((EncData4>>4) & 0xFF))
+											if (data4_one == ((encData[3]>>4) & 0xFF))
 												{
 													axis4(0);
 													error = 1;
 													//flag = 0;
-													rab4 = 0;
+													rab[3] = 0;
 												}
 											}
 										}
 
-										if (rab5)
+										if (rab[4])
 										{
-											temp8 = ((EncData5>>5) & 0xFF);
-											if (e5 != temp8)
+											temp8 = ((encData[4]>>5) & 0xFF);
+											if (e[4] != temp8)
 											{
-											if (data5_one == ((EncData5>>5) & 0xFF))
+											if (data5_one == ((encData[4]>>5) & 0xFF))
 												{
 													axis5(0);
 													error = 1;
 													//flag = 0;
-													rab5 = 0;
+													rab[4] = 0;
 												}
 											}
 										}
 
-										if (rab6)
+										if (rab[5])
 										{
-											temp8 = ((EncData6>>2) & 0xFF);
-											if (e6 != temp8)
+											temp8 = ((encData[5]>>2) & 0xFF);
+											if (e[5] != temp8)
 											{
-											if (data6_one == ((EncData6>>2) & 0xFF))
+											if (data6_one == ((encData[5]>>2) & 0xFF))
 												{
 													claw(0);
 													error = 1;
 													//flag = 0;
-													rab6 = 0;
+													rab[5] = 0;
 												}
 											}
 										}
@@ -606,209 +548,153 @@ int main(void)
 									}
 					}//end switch
 			
-/*	}//END if ERROR	
-//	else //если ошибка -- выводим 40 40 40
-//	{
-		platform(0);
-		axis2(0);
-		axis3(0);
-		axis4(0);
-		axis5(0);
-		claw(0);
-		Send_Buffer[0] = 40;
-		Send_Buffer[1] = 40;
-		Send_Buffer[2] = 40;
-		Send_Buffer[3] = 40;
-		mail = 1;
-	}	*/				
-		//	Receive_Buffer[1] = 0;
-
-
 				
     if (bDeviceState == CONFIGURED)
     {
-      CDC_Receive_DATA();
-			
-			if (Receive_Buffer[0]==0) // установка нулей, установление центаральных положений счетчиков
-            {
-							//---DEBUG-------
-							//		platform(0);
-							//		axis2(0);
-							//		axis3(0);
-							//		axis4(0);
-							//		axis5(0);
-							//		claw(0);
-							
-							//---------------
-							//		Send_Buffer[0] = 0;//обнуляем буфер отправки данных
-							//		Send_Buffer[1] = 0;
-							//		Send_Buffer[2] = 0;
-							//		Send_Buffer[3] = 0;
-				switch (Receive_Buffer[1])
-					{
-										case 1: 
-												Send_Buffer[0] = ((EncData1 >> 6) & 0xFF);
-												Send_Buffer[1] = 180;
-												mail = 1;
-												break;
-										case 2: Send_Buffer[0] = ((EncData2 >> 5) & 0xFF);
-												Send_Buffer[1] = 160;
-												mail = 1;
-												break;
-										case 3: Send_Buffer[0] = ((EncData3 >> 6) & 0xFF);
-												Send_Buffer[1] = 110;
-												mail = 1;
-												break;
-										case 4: Send_Buffer[0] = ((EncData4 >> 4) & 0xFF);
-												Send_Buffer[1] = 80;
-												mail = 1;
-												break;
-										case 5: Send_Buffer[0] = ((EncData5 >> 5) & 0xFF);
-												Send_Buffer[1] = 250;
-												mail = 1;
-												break;
-										case 6: Send_Buffer[0] = ((EncData6 >> 2) & 0xFF);
-												Send_Buffer[1] = 200;
-												mail = 1;
-												break;
-										case 7: //error = 0;
-							                   	platform(0);
-												axis2(0);
-												axis3(0);
-												axis4(0);
-												axis5(0);
-												claw(0);
-												Send_Buffer[0] = 0;
-												Send_Buffer[1] = 0;
-												//Send_Buffer[2] = 0;
-												//Send_Buffer[3] = 0;
-
-										default:;
+        CDC_Receive_DATA();
+        if(Receive_length)
+        {
+            char buf[16];
+            for(int x = 0; x < Receive_length; x++) buf[x] = Receive_Buffer[x];
+            const char * e = parse(buf, buf + Receive_length);
+            //if(Receive_Buffer[0] == 'H')
+            if(e)
+                sendText(e);
+            sendAll();
+            Receive_length = 0;
+        }
+		/*if (Receive_Buffer[0]==0) // установка нулей, установление центаральных положений счетчиков
+        {
+            switch (Receive_Buffer[1])
+			{
+            case 1: 
+                Send_Buffer[0] = ((encData[0] >> 6) & 0xFF);
+                Send_Buffer[1] = 180;
+                mail = 1;
+                break;
+            case 2: 
+                Send_Buffer[0] = ((encData[1] >> 5) & 0xFF);
+            Send_Buffer[1] = 160;
+            mail = 1;
+            break;
+            case 3: Send_Buffer[0] = ((encData[2] >> 6) & 0xFF);
+            Send_Buffer[1] = 110;
+            mail = 1;
+            break;
+            case 4: Send_Buffer[0] = ((encData[3] >> 4) & 0xFF);
+            Send_Buffer[1] = 80;
+            mail = 1;
+            break;
+            case 5: Send_Buffer[0] = ((encData[4] >> 5) & 0xFF);
+            Send_Buffer[1] = 250;
+            mail = 1;
+            break;
+            case 6: Send_Buffer[0] = ((encData[5] >> 2) & 0xFF);
+            Send_Buffer[1] = 200;
+            mail = 1;
+            break;
+            case 7: //error = 0;
+              platform(0);
+              axis2(0);
+              axis3(0);
+              axis4(0);
+              axis5(0);
+              claw(0);
+              Send_Buffer[0] = 0;
+              Send_Buffer[1] = 0;
+              //Send_Buffer[2] = 0;
+              //Send_Buffer[3] = 0;
+              
+            default:;
 					}
 
             }
     }//end #0
       
-//****** запись -- номер мотора 					
+// ****** запись -- номер мотора 					
 								
-      if (Receive_Buffer[0] == 1) 
-            {
-//            	error = 0;
-              	switch (Receive_Buffer[1])
-							{
-								case 0: 
-													 rab1 = 0;
-													 rab2 = 0;
-													 rab3 = 0;
-													 rab4 = 0;
-													 rab5 = 0;
-													 rab6 = 0;
-													 platform(0);
-													 axis2(0);
-													 axis3(0);
-													 axis4(0);
-													 axis5(0);
-													 claw(0);
-													 break;
-								
-								case 1:
-													if (!rab1)
-												  	{													
-														rab1 = 1;
-														// platform(2);
-														e1 = Receive_Buffer[2];//запоминаем угол 
-													}
-													break;
-								
-								/*case 11:
-												if (!rab1)
-												  {
-													rab1 = 2;
-													// platform(1);
-													Receive_Buffer[2] = e1;//запоминаем угол
-		  										  } 
-												break;
-								*/
-								case 2:
-													if (!rab2)
-												  	{													
-														rab2 = 1;
-														e2 = Receive_Buffer[2];//запоминаем угол 
-													} 
-													// axis2(2);
-													 break;
-								/*
-								case 22:
-													 axis2(1);
-													 break;
-								*/
-								case 3:
-													if (!rab3)
-												  	{													
-														rab3 = 1;
-														e3 = Receive_Buffer[2];//запоминаем угол 
-													}
-													 //axis3(2);
-													 break;
-								
-								/*case 33:
-													 axis3(1);
-													 break;
-								*/
-								case 4:
-													if (!rab4)
-												  	{													
-														rab4 = 1;
-														e4 = Receive_Buffer[2];//запоминаем угол 
-													}
-													 //axis4(2);
-													 break;
-								
-								/*case 44:
-													 axis4(1);
-													 break;
-								*/
-								case 5:
-													if (!rab5)
-												  	{													
-														rab5 = 1;
-														e5 = Receive_Buffer[2];//запоминаем угол 
-													}
-													 //axis5(2);
-													 break;
-								
-								/*case 55:
-													 axis5(1);
-													 break;
-								*/
-								case 6: 	 //otkrivaetsa
-													 if (!rab6)
-												  	{													
-														rab6 = 1;
-														e6 = Receive_Buffer[2];//запоминаем угол 
-													}
-													 //claw(1);
-													 break;
-								default:;
-								/*case 66:	 //zakrivaetsa
-													 claw(2);
-													 break;
-								*/
-							}//end switch
-						}//end if
+    if (Receive_Buffer[0] == 1) 
+    {
+        switch (Receive_Buffer[1])
+		{
+			case 0: 
+                rab[0] = 0;
+                rab[1] = 0;
+                rab[2] = 0;
+                rab[3] = 0;
+                rab[4] = 0;
+                rab[5] = 0;
+                platform(0);
+                axis2(0);
+                axis3(0);
+                axis4(0);
+                axis5(0);
+                claw(0);
+                break;					
+			case 1:
+                if (!rab[0])
+                {													
+                    rab[0] = 1;
+                    // platform(2);
+                    e[0] = Receive_Buffer[2];//запоминаем угол 
+                }
+                break;
+                
+            case 2:
+                if (!rab[1])
+                {													
+                    rab[1] = 1;
+                    e[1] = Receive_Buffer[2];//запоминаем угол 
+                } 
+                break;
+            case 3:
+                if (!rab[2])
+                {													
+                    rab[2] = 1;
+                    e[2] = Receive_Buffer[2];//запоминаем угол 
+                }
+                break;
+            case 4:
+                if (!rab[3])
+                {													
+                    rab[3] = 1;
+                    e[3] = Receive_Buffer[2];//запоминаем угол 
+                }
+                //axis4(2);
+                break;
+                
+            case 5:
+                if (!rab[4])
+                {													
+                    rab[4] = 1;
+                    e[4] = Receive_Buffer[2];//запоминаем угол 
+                }
+                //axis5(2);
+                break;
+            case 6: 	 //otkrivaetsa
+                if (!rab[5])
+                {													
+                    rab[5] = 1;
+                    e[5] = Receive_Buffer[2];//запоминаем угол 
+                }
+                //claw(1);
+                break;
+            default:;
+        }//end switch
+    }//end if
 											
-      /*Check to see if we have data yet */
-      if (mail && (Receive_length  != 0))
+      / *Check to see if we have data yet * /
+      / *if (mail && (Receive_length  != 0))
       {
 		if (packet_sent == 1)
           CDC_Send_DATA (Send_Buffer, 2); //Receive_length);
         Receive_length = 0;
         mail = 0;
-      }
-					
+      }*/
+    }			
 			
-    }//end if (bDeviceState == CONFIGURED)
-  }//end while
+    }
+}
  
 
 
@@ -835,8 +721,8 @@ void zero (void) //pfgecrfnm 2-3 раза
 		if (!GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_9))
 		{	
 			axis2(0);
-			EncData3 = 0;
-			while (EncData3 != ((0x28<<6) & 0xFFFF))
+			encData[2] = 0;
+			while (encData[2] != ((0x28<<6) & 0xFFFF))
 				{
 					Enc3();
 					axis3(1);
@@ -845,14 +731,14 @@ void zero (void) //pfgecrfnm 2-3 раза
 		}
 	}
 	axis2(0);
-	EncData2 = 0;
+	encData[1] = 0;
 
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_14))
 	{
 		axis5(2);
 	}
 	axis5(0);
-	EncData5 = 0;
+	encData[4] = 0;
 
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_8))
 	{
@@ -863,7 +749,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 			axis4(0);}
 	}
 	axis4(0);
-	EncData4 = 0;
+	encData[3] = 0;
 
 	/*
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_8))
@@ -871,7 +757,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 		axis4(2);
 	}
 	axis4(0);
-	EncData4 = 0;
+	encData[3] = 0;
 */
 	
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_9))
@@ -879,7 +765,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 		axis3(2);
 	}
 	axis3(0);
-	EncData3 = ((0x28<<6) & 0xFFFF); //40
+	encData[2] = ((0x28<<6) & 0xFFFF); //40
 
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_11)) // кнопка платформы
 	{
@@ -893,7 +779,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 		switch (dick)
 					{
 					case 0: 
-									fll = ((EncData1>>6) & 0xFF);
+									fll = ((encData[0]>>6) & 0xFF);
 									dick = 1;
 									break;
 					case 1:
@@ -902,7 +788,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 											cnt_dick = 0;
 											dick = 0;
 											
-											if (fll == ((EncData1>>6) & 0xFF))
+											if (fll == ((encData[0]>>6) & 0xFF))
 											{
 												platform(1);
 												p = 1;
@@ -915,7 +801,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 					}
 	}	
 	platform(0);
-	EncData1 = ((0x55<<6) & 0xFFFF); // 85 сдвигаем влево на 6! или 120??!!
+	encData[0] = ((0x55<<6) & 0xFFFF); // 85 сдвигаем влево на 6! или 120??!!
 	dick = 0;
 	cnt_dick = 0;
 
@@ -927,7 +813,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 		switch (dick)
 					{
 					case 0: 
-									fll = ((EncData6>>2) & 0xFF);
+									fll = ((encData[5]>>2) & 0xFF);
 									dick = 1;
 									break;
 					case 1:
@@ -936,7 +822,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 											cnt_dick = 0;
 											dick = 0;
 											
-											if (fll == ((EncData6>>2) & 0xFF))
+											if (fll == ((encData[5]>>2) & 0xFF))
 											{
 												cl = 1;
 											}
@@ -948,7 +834,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 					}
 	}	
 	claw(0);
-	EncData6 = 0;
+	encData[5] = 0;
 
 } // end zero(0);
 
@@ -962,18 +848,18 @@ void platform(uint8_t x){
 			case 0:
 					GPIOC->BRR = GPIO_Pin_10; //enabled
                   	GPIOA->BRR = GPIO_Pin_15; //move
-                  	GPIOA->BRR = GPIO_Pin_12; //GPIO_Pin_14;
+                  	GPIOA->BRR = GPIO_Pin_8; //GPIO_Pin_14;
 					break;
 			
 			case 1:
 					GPIOC->BSRR = GPIO_Pin_10; //enabled
                   	GPIOA->BSRR = GPIO_Pin_15; //move
-                  	GPIOA->BRR = GPIO_Pin_12; //GPIO_Pin_14;
+                  	GPIOA->BRR = GPIO_Pin_8; //GPIO_Pin_14;
 					break;
 					 
 			case 2:
 					GPIOC->BSRR = GPIO_Pin_10; //enabled
-                  	GPIOA->BSRR = GPIO_Pin_12; //move
+                  	GPIOA->BSRR = GPIO_Pin_8; //move
                   	GPIOA->BRR = GPIO_Pin_15;
 					break;
 			}			
@@ -1100,19 +986,19 @@ void claw(uint8_t x){
 	{
 		case 2:
 				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_11;//GPIO_Pin_13; //move
+                GPIOA->BRR = GPIO_Pin_9;//GPIO_Pin_13; //move
                 GPIOF->BSRR = GPIO_Pin_6;
 				break;
 		
 		case 1:  
 				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BSRR = GPIO_Pin_11;//GPIO_Pin_13; //move
+                GPIOA->BSRR = GPIO_Pin_9;//GPIO_Pin_13; //move
                 GPIOF->BRR = GPIO_Pin_6;
 				break;
 		
 		case 0:  
 				GPIOC->BRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_11;//GPIO_Pin_13; //move
+                GPIOA->BRR = GPIO_Pin_9;//GPIO_Pin_13; //move
                 GPIOF->BRR = GPIO_Pin_6;
 				break;
 	}
@@ -1126,36 +1012,36 @@ void EncPlatform(void)
 	uint16_t t3 = GPIO_ReadInputData(GPIOA);
 	New = (t3>>6) & 0x03;//состояние энкодера
 	
-    switch(EncState1)
+    switch(EncState[0])
 	{
 	case 2:
 		{
-		if(New == 3) EncData1++;
-		if(New == 0) EncData1--; 
+		if(New == 3) encData[0]++;
+		if(New == 0) encData[0]--; 
 		break;
 		}
 
 	case 0:
 		{
-		if(New == 2) EncData1++;
-		if(New == 1) EncData1--;
+		if(New == 2) encData[0]++;
+		if(New == 1) encData[0]--;
 		break;
 		}
 	case 1:
 		{
-		if(New == 0) EncData1++;
-		if(New == 3) EncData1--;
+		if(New == 0) encData[0]++;
+		if(New == 3) encData[0]--;
 		break;
 		}
 	case 3:
 		{
-		if(New == 1) EncData1++;
-		if(New == 2) EncData1--; 
+		if(New == 1) encData[0]++;
+		if(New == 2) encData[0]--; 
 		break;
 		}
 	}
 	
-	EncState1 = New;		// запись нового значения
+	EncState[0] = New;		// запись нового значения
 				// предыдущего состояния
 }
 void Enc2(void){ //обработка энкодера #2 
@@ -1164,36 +1050,36 @@ void Enc2(void){ //обработка энкодера #2
 	uint16_t t3 = GPIO_ReadInputData(GPIOA);
 	New = t3 & 0x03;//состояние энкодера
 	
-								switch(EncState2)
+								switch(EncState[1])
 									{
 									case 2:
 										{
-										if(New == 3) EncData2++;
-										if(New == 0) EncData2--; 
+										if(New == 3) encData[1]++;
+										if(New == 0) encData[1]--; 
 										break;
 										}
 
 									case 0:
 										{
-										if(New == 2) EncData2++;
-										if(New == 1) EncData2--;
+										if(New == 2) encData[1]++;
+										if(New == 1) encData[1]--;
 										break;
 										}
 									case 1:
 										{
-										if(New == 0) EncData2++;
-										if(New == 3) EncData2--;
+										if(New == 0) encData[1]++;
+										if(New == 3) encData[1]--;
 										break;
 										}
 									case 3:
 										{
-										if(New == 1) EncData2++;
-										if(New == 2) EncData2--; 
+										if(New == 1) encData[1]++;
+										if(New == 2) encData[1]--; 
 										break;
 										}
 									}
 	
-	EncState2 = New;		// запись нового значения
+	EncState[1] = New;		// запись нового значения
 				// предыдущего состояния
 }
 
@@ -1203,36 +1089,36 @@ void Enc3(void)
 	uint16_t t3 = GPIO_ReadInputData(GPIOA);
 	New = (t3>>4) & 0x03;//состояние энкодера
  
-		switch(EncState3)
+		switch(EncState[2])
 			{
 			case 2:
 				{
-				if(New == 3) EncData3++;
-				if(New == 0) EncData3--; 
+				if(New == 3) encData[2]++;
+				if(New == 0) encData[2]--; 
 				break;
 				}
 
 			case 0:
 				{
-				if(New == 2) EncData3++;
-				if(New == 1) EncData3--;
+				if(New == 2) encData[2]++;
+				if(New == 1) encData[2]--;
 				break;
 				}
 			case 1:
 				{
-				if(New == 0) EncData3++;
-				if(New == 3) EncData3--;
+				if(New == 0) encData[2]++;
+				if(New == 3) encData[2]--;
 				break;
 				}
 			case 3:
 				{
-				if(New == 1) EncData3++;
-				if(New == 2) EncData3--; 
+				if(New == 1) encData[2]++;
+				if(New == 2) encData[2]--; 
 				break;
 				}
 			}
 	
-	EncState3 = New;		// запись нового значения
+	EncState[2] = New;		// запись нового значения
 				// предыдущего состояния
 }
 void Enc4(void){ //обработка энкодера #4
@@ -1241,36 +1127,36 @@ void Enc4(void){ //обработка энкодера #4
 	uint16_t t3 = GPIO_ReadInputData(GPIOD);
 	New = (t3>>12) & 0x03;//состояние энкодера
 	
-	switch(EncState4)
+	switch(EncState[3])
 		{
 		case 2:
 			{
-			if(New == 3) EncData4++;
-			if(New == 0) EncData4--; 
+			if(New == 3) encData[3]++;
+			if(New == 0) encData[3]--; 
 			break;
 			}
 
 		case 0:
 			{
-			if(New == 2) EncData4++;
-			if(New == 1) EncData4--;
+			if(New == 2) encData[3]++;
+			if(New == 1) encData[3]--;
 			break;
 			}
 		case 1:
 			{
-			if(New == 0) EncData4++;
-			if(New == 3) EncData4--;
+			if(New == 0) encData[3]++;
+			if(New == 3) encData[3]--;
 			break;
 			}
 		case 3:
 			{
-			if(New == 1) EncData4++;
-			if(New == 2) EncData4--; 
+			if(New == 1) encData[3]++;
+			if(New == 2) encData[3]--; 
 			break;
 			}
 		}
 	
-	EncState4 = New;		// запись нового значения
+	EncState[3] = New;		// запись нового значения
 				// предыдущего состояния
 }
 void Enc5(void){ //обработка энкодера #5
@@ -1279,36 +1165,36 @@ void Enc5(void){ //обработка энкодера #5
 	uint16_t t3 = GPIO_ReadInputData(GPIOC);
 	New = (t3>>6) & 0x03;//состояние энкодера
 	
-	switch(EncState5)
+	switch(EncState[4])
 		{
 		case 2:
 			{
-			if(New == 3) EncData5++;
-			if(New == 0) EncData5--; 
+			if(New == 3) encData[4]++;
+			if(New == 0) encData[4]--; 
 			break;
 			}
 
 		case 0:
 			{
-			if(New == 2) EncData5++;
-			if(New == 1) EncData5--;
+			if(New == 2) encData[4]++;
+			if(New == 1) encData[4]--;
 			break;
 			}
 		case 1:
 			{
-			if(New == 0) EncData5++;
-			if(New == 3) EncData5--;
+			if(New == 0) encData[4]++;
+			if(New == 3) encData[4]--;
 			break;
 			}
 		case 3:
 			{
-			if(New == 1) EncData5++;
-			if(New == 2) EncData5--; 
+			if(New == 1) encData[4]++;
+			if(New == 2) encData[4]--; 
 			break;
 			}
 		}
 	
-	EncState5 = New;		// запись нового значения
+	EncState[4] = New;		// запись нового значения
 				// предыдущего состояния
 }
 void EncClaw(void){ //обработка энкодера #6 (claw)
@@ -1317,36 +1203,36 @@ void EncClaw(void){ //обработка энкодера #6 (claw)
 	uint16_t t3 = GPIO_ReadInputData(GPIOF);
 	New = (t3>>9) & 0x03;//состояние энкодера
  
-					switch(EncState6)
+					switch(EncState[5])
 						{
 						case 2:
 							{
-							if(New == 3) EncData6++;
-							if(New == 0) EncData6--; 
+							if(New == 3) encData[5]++;
+							if(New == 0) encData[5]--; 
 							break;
 							}
 
 						case 0:
 							{
-							if(New == 2) EncData6++;
-							if(New == 1) EncData6--;
+							if(New == 2) encData[5]++;
+							if(New == 1) encData[5]--;
 							break;
 							}
 						case 1:
 							{
-							if(New == 0) EncData6++;
-							if(New == 3) EncData6--;
+							if(New == 0) encData[5]++;
+							if(New == 3) encData[5]--;
 							break;
 							}
 						case 3:
 							{
-							if(New == 1) EncData6++;
-							if(New == 2) EncData6--; 
+							if(New == 1) encData[5]++;
+							if(New == 2) encData[5]--; 
 							break;
 							}
 						}
 	
-	EncState6 = New;		// запись нового значения
+	EncState[5] = New;		// запись нового значения
 				// предыдущего состояния
 }
 

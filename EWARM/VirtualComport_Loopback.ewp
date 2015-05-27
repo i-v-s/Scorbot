@@ -5843,7 +5843,7 @@
         <option>
           <name>GBECoreSlave</name>
           <version>21</version>
-          <state>39</state>
+          <state>40</state>
         </option>
         <option>
           <name>OGUseCmsis</name>
@@ -7051,6 +7051,12 @@
   <group>
     <name>User</name>
     <file>
+      <name>$PROJ_DIR$\..\src\host_io.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\host_io.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\src\hw_config.c</name>
     </file>
     <file>
@@ -7058,6 +7064,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\mx_gpio.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\parser.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\parser.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\stm32_it.c</name>
