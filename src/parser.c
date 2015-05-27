@@ -11,7 +11,7 @@ char num[16], * np = num;
 extern uint16_t encData[6];
 extern uint8_t rab[6];
 extern uint16_t e[6];
-
+extern uint8_t nozero;
 
 int command = 0;
 struct Param
@@ -41,8 +41,6 @@ const char * commit()
                 e[a] = (int)pc->pos;
             }
         }
-            
-        
     }
     command = 0;
     sendText(")");
@@ -78,25 +76,26 @@ const char * ptp(const char * cmd)
     return 0;
 }
 
+const char * setZero(const char * cmd)
+{
+    sendText("ZERO: ");
+    nozero = 1;
+    return 0;
+}
+
 const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
     if(!strcmp(cmd, "ptp")) method = ptp;
     else if(!strcmp(cmd, "reset")) method = reset;
     else if(!strcmp(cmd, "pos")) method = pos;
-    /*else if(!strcmp(cmd, ""
-    {
-        dp += sprintf(dp, "PTP(");
-        cm = 1;
-        return 1;
-    }*/
+    else if(!strcmp(cmd, "zero")) method = setZero;
     if(method)
     {
         if(command) commit();
         tp = text;
         return method(cmd);
     }
-
     return 0;
 }
 
@@ -129,7 +128,6 @@ const char * onComplex(const char * name, const char * data)
         return 0;
     }
     return "Unknown name";
-    
 }
 
 //char 

@@ -39,7 +39,7 @@ int relativ; //очередная переменная вникуда
 //uint16_t cnt_3;//счет энкодера #3
 uint8_t monit = 0;//анализ номера энкодера
 //uint8_t num_enc;// удалить вместе с GetRelative function
-uint8_t nozero = 1;
+uint8_t nozero = 0;
 
 //enc_prg
 	uint8_t EncState[6]; //предыдущее состояние энкодера
@@ -222,26 +222,21 @@ void timer_CheckEncoder(void)//функция для проверки энкодеров
 
 int main(void)
 {
-    /*char t[] = "ptp a20 save 70 ptp B 34  ;";
-    const char * er = parse(t, t + sizeof(t));
-    
-    if(er) printf(er);*/
-    
     Set_System();
     Set_USBClock();
     USB_Interrupts_Config();
     USB_Init();
     mx_pinout_config();//gpio init
 
-    while (1)
+    while(1)
     {
-		/*if (nozero)
+		if(nozero)
 		{
 			zero(); 
-			zero();
-			zero();
+			//zero();
+			//zero();
 			nozero = 0;
-		}*/
+		}
 
 		//считаем энкодеры
         EncPlatform();
@@ -714,6 +709,7 @@ void zero (void) //pfgecrfnm 2-3 раза
 	//	axis4(2);
 	//	axis5(2);
 	//	claw(1);
+    sendText("Axis 2 to zero. ");
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_10))
 	{
 		axis2(1);
@@ -731,15 +727,23 @@ void zero (void) //pfgecrfnm 2-3 раза
 		}
 	}
 	axis2(0);
+    
+    sendText("Axis 2&3 ok. ");
+        
 	encData[1] = 0;
 
+    sendText("Axis 5 to zero. ");
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_14))
 	{
 		axis5(2);
 	}
 	axis5(0);
+    
+    sendText("Axis 5 ok. ");
+    
 	encData[4] = 0;
 
+    sendText("Axis 4 to zero. ");
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_8))
 	{
 		axis4(2);
@@ -749,24 +753,19 @@ void zero (void) //pfgecrfnm 2-3 раза
 			axis4(0);}
 	}
 	axis4(0);
+    sendText("Axis 4 ok. ");
 	encData[3] = 0;
-
-	/*
-	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_8))
-	{
-		axis4(2);
-	}
-	axis4(0);
-	encData[3] = 0;
-*/
 	
+    sendText("Axis 3 to zero.");
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_9))
 	{
 		axis3(2);
 	}
 	axis3(0);
+    sendText("Axis 3 ok. ");
 	encData[2] = ((0x28<<6) & 0xFFFF); //40
 
+    sendText("Axis 1 to zero. ");
 	while (GPIO_ReadInputDataBit (GPIOD, GPIO_Pin_11)) // кнопка платформы
 	{
 		EncPlatform();
@@ -801,6 +800,8 @@ void zero (void) //pfgecrfnm 2-3 раза
 					}
 	}	
 	platform(0);
+    sendText("Axis 1 to zero. ");
+    
 	encData[0] = ((0x55<<6) & 0xFFFF); // 85 сдвигаем влево на 6! или 120??!!
 	dick = 0;
 	cnt_dick = 0;
