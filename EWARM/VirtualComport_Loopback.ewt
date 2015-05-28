@@ -7646,6 +7646,12 @@
   <group>
     <name>User</name>
     <file>
+      <name>$PROJ_DIR$\..\src\controller.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\controller.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\src\host_io.c</name>
     </file>
     <file>

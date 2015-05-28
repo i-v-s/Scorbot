@@ -61,10 +61,10 @@ const char * reset(const char * cmd)
 const char * pos(const char * cmd)
 {
     sendText("Position:");
-    char buf[12];
     for(char x = 0; x < 6; x++)
     {
-        sprintf(buf, " %c%d", x + 'A', getEncPos(x));
+        char buf[12];
+        sprintf(buf, " %c%d", x + 'A', encData[x]);
         sendText(buf);
     }
     return 0;

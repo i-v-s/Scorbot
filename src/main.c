@@ -849,18 +849,18 @@ void platform(uint8_t x){
 			case 0:
 					GPIOC->BRR = GPIO_Pin_10; //enabled
                   	GPIOA->BRR = GPIO_Pin_15; //move
-                  	GPIOA->BRR = GPIO_Pin_8; //GPIO_Pin_14;
+                  	GPIOA->BRR = GPIO_Pin_4; //GPIO_Pin_14;
 					break;
 			
 			case 1:
 					GPIOC->BSRR = GPIO_Pin_10; //enabled
                   	GPIOA->BSRR = GPIO_Pin_15; //move
-                  	GPIOA->BRR = GPIO_Pin_8; //GPIO_Pin_14;
+                  	GPIOA->BRR = GPIO_Pin_4; //GPIO_Pin_14;
 					break;
 					 
 			case 2:
 					GPIOC->BSRR = GPIO_Pin_10; //enabled
-                  	GPIOA->BSRR = GPIO_Pin_8; //move
+                  	GPIOA->BSRR = GPIO_Pin_4; //move
                   	GPIOA->BRR = GPIO_Pin_15;
 					break;
 			}			
@@ -987,19 +987,19 @@ void claw(uint8_t x){
 	{
 		case 2:
 				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_9;//GPIO_Pin_13; //move
+                GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
                 GPIOF->BSRR = GPIO_Pin_6;
 				break;
 		
 		case 1:  
 				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BSRR = GPIO_Pin_9;//GPIO_Pin_13; //move
+                GPIOA->BSRR = GPIO_Pin_5;//GPIO_Pin_13; //move
                 GPIOF->BRR = GPIO_Pin_6;
 				break;
 		
 		case 0:  
 				GPIOC->BRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_9;//GPIO_Pin_13; //move
+                GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
                 GPIOF->BRR = GPIO_Pin_6;
 				break;
 	}

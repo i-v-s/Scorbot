@@ -25,6 +25,7 @@
 
 /* Includes ------------------------------------------------------------------*/
 #include "mx_gpio.h"
+#include "controller.h"
 /* USER CODE BEGIN 0 */
 
 /* USER CODE END 0 */
@@ -279,10 +280,6 @@ void mx_pinout_config(void) {
 	GPIO_Init(GPIOE, &GPIO_InitStruct);
 
 	/*Configure GPIO pin */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12|GPIO_Pin_13;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
 	
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_14;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
@@ -300,17 +297,42 @@ void mx_pinout_config(void) {
 	GPIO_Init(GPIOE, &GPIO_InitStruct);
 	
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6|GPIO_Pin_7;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_Init(GPIOC, &GPIO_InitStruct);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_4);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_4);
 	
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0|GPIO_Pin_1|GPIO_Pin_4|GPIO_Pin_5|GPIO_Pin_6|GPIO_Pin_7;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_IN;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+    // Ёнкодер оси 1 TIM3, AF2
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6| GPIO_Pin_7 | GPIO_Pin_0|GPIO_Pin_1 | GPIO_Pin_8 | GPIO_Pin_9;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;    
 	GPIO_Init(GPIOA, &GPIO_InitStruct);
-
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource6, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource7, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_1);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_1);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource8, GPIO_AF_6);
+    GPIO_PinAFConfig(GPIOA, GPIO_PinSource9, GPIO_AF_6);
+    
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12|GPIO_Pin_13;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_Init(GPIOD, &GPIO_InitStruct);
+    GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_2);
+    GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_2);
+    
+    //TIM3->SMCR 
+    RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 | RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1, ENABLE);
+    initAxis(0, TIM3);
+    initAxis(1, TIM2);
+    initAxis(2, TIM1);
+    initAxis(3, TIM4);
+    initAxis(4, TIM8);
+    
 	/*Configure GPIO pin */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9|GPIO_Pin_8|GPIO_Pin_15;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_15;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
