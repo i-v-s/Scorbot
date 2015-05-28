@@ -26,246 +26,128 @@
 /* Includes ------------------------------------------------------------------*/
 #include "mx_gpio.h"
 #include "controller.h"
-/* USER CODE BEGIN 0 */
 
-/* USER CODE END 0 */
+void m0f() // Вперёд
+{
+    GPIOA->BSRR = GPIO_Pin_4; //move
+    GPIOA->BRR = GPIO_Pin_15;
+    GPIOC->BSRR = GPIO_Pin_10; //enabled
+}
 
-/*----------------------------------------------------------------------------*/
-/* Configure GPIO                                                             */
-/*----------------------------------------------------------------------------*/
-/* USER CODE BEGIN 1 */
+void m0r() // Назад
+{
+    GPIOA->BSRR = GPIO_Pin_15; //move
+    GPIOA->BRR = GPIO_Pin_4; //GPIO_Pin_14;    
+    GPIOC->BSRR = GPIO_Pin_10; //enabled
+}
 
-/* USER CODE END 1 */
+void m0s() // Стоп
+{
+    GPIOC->BRR = GPIO_Pin_10; //enabled
+    GPIOA->BRR = GPIO_Pin_15 | GPIO_Pin_4; //move
+}
+
+void m1f()
+{
+    GPIOB->BSRR = GPIO_Pin_4; //enabled
+    GPIOB->BSRR = GPIO_Pin_3; //move
+    GPIOD->BRR = GPIO_Pin_7;
+}
+
+void m1r()
+{
+    GPIOB->BSRR = GPIO_Pin_4; //enabled
+    GPIOD->BSRR = GPIO_Pin_7; //move
+    GPIOB->BRR = GPIO_Pin_3;
+}
+
+void m1s()
+{
+    GPIOB->BRR = GPIO_Pin_4 | GPIO_Pin_3;
+    GPIOD->BRR = GPIO_Pin_7;
+}
+
+void m2f()
+{
+	GPIOD->BSRR = GPIO_Pin_0; //enabled
+    GPIOC->BRR = GPIO_Pin_11; //move
+    GPIOC->BSRR = GPIO_Pin_12;
+}
+
+void m2r()
+{
+    GPIOD->BSRR = GPIO_Pin_0; //enabled
+    GPIOC->BSRR = GPIO_Pin_11; //move
+    GPIOC->BRR = GPIO_Pin_12;
+}
+
+void m2s()
+{
+    GPIOD->BRR = GPIO_Pin_0; //enabled
+    GPIOC->BRR = GPIO_Pin_11; //move
+    GPIOC->BRR = GPIO_Pin_12;
+}
+
+void m3f()
+{
+    GPIOD->BSRR = GPIO_Pin_3; //enabled
+    GPIOD->BSRR = GPIO_Pin_1; //move
+    GPIOD->BRR = GPIO_Pin_2;
+}
+
+void m4f()
+{
+    GPIOD->BSRR = GPIO_Pin_6; //enabled
+    GPIOD->BSRR = GPIO_Pin_4; //move
+    GPIOD->BRR = GPIO_Pin_5;
+}
+		
+void m3r()
+{
+    GPIOD->BSRR = GPIO_Pin_2 | GPIO_Pin_3; //enabled
+    GPIOD->BRR = GPIO_Pin_1;
+}
+
+void m4r()
+{
+    GPIOD->BSRR = GPIO_Pin_5 | GPIO_Pin_6; //enabled
+    GPIOD->BRR = GPIO_Pin_4;
+}
+
+void m3s()
+{
+    GPIOD->BRR = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3; //enabled
+}
+
+void m4s()
+{
+    GPIOD->BRR = GPIO_Pin_4 | GPIO_Pin_5 | GPIO_Pin_6; //enabled
+}
+
+void m5f()
+{
+    GPIOC->BSRR = GPIO_Pin_9; //enabled
+    GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
+    GPIOF->BSRR = GPIO_Pin_6;
+}
+
+void m5r()
+{
+    GPIOC->BSRR = GPIO_Pin_9; //enabled
+    GPIOA->BSRR = GPIO_Pin_5;//GPIO_Pin_13; //move
+    GPIOF->BRR = GPIO_Pin_6;
+}
+
+void m5s()
+{
+    GPIOC->BRR = GPIO_Pin_9; //enabled
+    GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
+    GPIOF->BRR = GPIO_Pin_6;
+}
 
 void mx_pinout_config(void) {
 	/* Private typedef ---------------------------------------------------------*/
 	GPIO_InitTypeDef GPIO_InitStruct;
-
-
-	/** TIM1 GPIO Configuration	
-		 PE9	 ------> TIM1_CH1
-		 PE11	 ------> TIM1_CH2
-	*/
-/*
-
-	//Enable or disable the AHB peripheral clock 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_9;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_11;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOE, GPIO_PinSource9, GPIO_AF_2);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOE, GPIO_PinSource11, GPIO_AF_2);
-
-
-	// TIM2 GPIO Configuration	
-		// PA0	 ------> TIM2_CH1_ETR
-		// PA1	 ------> TIM2_CH2
-	
-
-
-	//Enable or disable the AHB peripheral clock 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOA, ENABLE);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_0;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_1;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOA, &GPIO_InitStruct);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource0, GPIO_AF_1);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOA, GPIO_PinSource1, GPIO_AF_1);
-
-
-	// TIM3 GPIO Configuration	
-		// PE2	 ------> TIM3_CH1
-		// PE3	 ------> TIM3_CH2
-	
-
-
-	//Enable or disable the AHB peripheral clock 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE, ENABLE);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_2;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP; //NOPULL
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_3;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_UP; //NOPULL
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOE, &GPIO_InitStruct);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOE, GPIO_PinSource2, GPIO_AF_2);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOE, GPIO_PinSource3, GPIO_AF_2);
-
-
-	// TIM4 GPIO Configuration	
-	// PD12	 ------> TIM4_CH1
-		// PD13	 ------> TIM4_CH2
-	
-
-
-	//Enable or disable the AHB peripheral clock 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOD, ENABLE);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_12;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_13;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOD, &GPIO_InitStruct);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource12, GPIO_AF_2);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOD, GPIO_PinSource13, GPIO_AF_2);
-
-
-	// TIM8 GPIO Configuration	
-	//	 PC6	 ------> TIM8_CH1
-	//	 PC7	 ------> TIM8_CH2
-	
-
-
-	//Enable or disable the AHB peripheral clock 
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOC, ENABLE);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_6;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-
-	//!!! GPIO_Init is commented because some parameters are missing
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_7;
-	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
-	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
-	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
-	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
-	GPIO_Init(GPIOC, &GPIO_InitStruct);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource6, GPIO_AF_4);
-
-	//Configure GPIO pin alternate function 
-	GPIO_PinAFConfig(GPIOC, GPIO_PinSource7, GPIO_AF_4);
-*/
-
-	/** Configure pins as GPIO
-		 PE4	 ------> GPIO_Output
-		 PE8	 ------> GPIO_Output ок LD4
-		 PE10	 ------> GPIO_Output
-		 PE12	 ------> GPIO_Output
-		 PE13	 ------> GPIO_Output
-		 PE14	 ------> GPIO_Output ок LD8
-		 PE15	 ------> GPIO_Output ок LD6
-		 PD8	 ------> GPIO_Input
-		 PD9	 ------> GPIO_Input
-		 PD10	 ------> GPIO_Input
-		 PD11	 ------> GPIO_Input
-		 PD14	 ------> GPIO_Input
-		 PA13	 ------> GPIO_Output
-		 PF6	 ------> GPIO_Output
-		 PA14	 ------> GPIO_Output
-		 PA15	 ------> GPIO_Output
-		 PC10	 ------> GPIO_Output
-		 PC11	 ------> GPIO_Output
-		 PC12	 ------> GPIO_Output
-		 PD0	 ------> GPIO_Output
-		 PD1	 ------> GPIO_Output
-		 PD2	 ------> GPIO_Output
-		 PD3	 ------> GPIO_Output
-		 PD4	 ------> GPIO_Output
-		 PD5	 ------> GPIO_Output
-		 PD6	 ------> GPIO_Output
-		 PD7	 ------> GPIO_Output
-		 PB3	 ------> GPIO_Output
-		 PB4	 ------> GPIO_Output
-		 PB5	 ------> GPIO_Output
-		 PE0	 ------> GPIO_Output
-     PC9	 ------> GPIO_Output
-		 
-		 энкодер для оси #6
-		 PF9   ------> GPIO_Input
-		 PF10  ------> GPIO_Input
-		 
-		 энкодеры:
-		 PE2	 ------> TIM3_CH1
-		 PE3	 ------> TIM3_CH2
-		 
-		 PC6	 ------> TIM8_CH1
-		 PC7	 ------> TIM8_CH2
-		 
-		 PD12	 ------> TIM4_CH1
-		 PD13	 ------> TIM4_CH2
-		 
-		 PA0	 ------> TIM2_CH1_ETR
-		 PA1	 ------> TIM2_CH2
-		 
-		 PE9	 ------> TIM1_CH1
-		 PE11	 ------> TIM1_CH2
-	*/
 
 
 	/*Enable or disable the AHB peripheral clock */
@@ -325,11 +207,23 @@ void mx_pinout_config(void) {
     //TIM3->SMCR 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 | RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
     RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1, ENABLE);
-    initAxis(0, TIM3);
-    initAxis(1, TIM2);
-    initAxis(2, TIM1);
-    initAxis(3, TIM4);
-    initAxis(4, TIM8);
+    initEncoder(motors + 0, TIM3);
+    initMotor(motors + 0, m0f, m0r, m0s);
+    
+    initEncoder(motors + 1, TIM2);
+    initMotor(motors + 1, m1f, m1r, m1s);
+    
+    initEncoder(motors + 2, TIM1);
+    initMotor(motors + 2, m2f, m2r, m2s);
+    
+    initEncoder(motors + 3, TIM4);
+    initMotor(motors + 3, m3f, m3r, m3s);
+
+    initEncoder(motors + 4, TIM8);
+    initMotor(motors + 4, m4f, m4r, m4s);
+
+    initMotor(motors + 5, m5f, m5r, m5s);
+    
     
 	/*Configure GPIO pin */
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_15;

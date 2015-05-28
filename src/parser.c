@@ -64,7 +64,7 @@ const char * pos(const char * cmd)
     char buf[12];
     for(char x = 0; x < 6; x++)
     {
-        sprintf(buf, " %c%d", x + 'A', getEncPos(x));
+        sprintf(buf, " %c%d", x + 'A', getMotorPos(motors + x));
         sendText(buf);
     }
     return 0;

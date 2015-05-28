@@ -23,6 +23,7 @@
 //#include <misc.h>
 #include "mx_gpio.h"
 #include "host_io.h"
+#include "controller.h"
 
 // константы для счета энкодеров
 //#define CORRECT1         (5)  /*<! константа для коррекции данных энкодера 1 (платформа) */
@@ -227,7 +228,12 @@ int main(void)
     USB_Interrupts_Config();
     USB_Init();
     mx_pinout_config();//gpio init
-
+     
+    for(int x = 10000000; x; x--)
+    {
+        ctlLoop();
+    }
+    while(1);
     while(1)
     {
 		if(nozero)
@@ -1012,7 +1018,7 @@ void EncPlatform(void)
 	// OK для энкодера #1
 	uint16_t t3 = GPIO_ReadInputData(GPIOA);
 	New = (t3>>6) & 0x03;//состояние энкодера
-	
+    
     switch(EncState[0])
 	{
 	case 2:
