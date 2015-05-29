@@ -9,8 +9,8 @@ Motor motors[6] = {0};
 float Apos() { return getMotorPos(motors + 0);}
 float Bpos() { return -getMotorPos(motors + 1);}
 float Cpos() { return getMotorPos(motors + 2);}
-float Dpos() { return getMotorPos(motors + 3) + getMotorPos(motors + 4);}
-float Epos() { return getMotorPos(motors + 3) - getMotorPos(motors + 4);}
+float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4)) / 2.0;}
+float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4)) / 2.0;}
 float Fpos() { return getMotorPos(motors + 5);}
 
 void Amove(float pos) { motors[0].ref = (int)pos;}

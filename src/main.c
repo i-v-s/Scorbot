@@ -40,7 +40,7 @@ int relativ; //очередная переменная вникуда
 //uint16_t cnt_3;//счет энкодера #3
 uint8_t monit = 0;//анализ номера энкодера
 //uint8_t num_enc;// удалить вместе с GetRelative function
-uint8_t nozero = 1;
+uint8_t nozero = 0;
 
 //enc_prg
 	uint8_t EncState[6]; //предыдущее состояние энкодера
