@@ -25,6 +25,8 @@
 /* Define to prevent recursive inclusion -------------------------------------*/
 #ifndef __mx_pinoutConfig_H
 #define __mx_pinoutConfig_H
+
+#define switches ((~GPIOD->IDR >> 8) & 0x4F)
 #ifdef __cplusplus
  extern "C" {
 #endif

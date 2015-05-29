@@ -38,8 +38,10 @@ const char * commit()
             if(a >= 'a' && a <= 'f')
             {
                 a -= 'a';
-                rab[a] = 1;
-                e[a] = (int)pc->pos;
+                axes[a].moveTo(pc->pos);
+                //moveMotor(motors + a, (int)pc->pos);
+                //rab[a] = 1;
+                //e[a] = (int)pc->pos;
             }
         }
     }
@@ -64,7 +66,7 @@ const char * pos(const char * cmd)
     char buf[12];
     for(char x = 0; x < 6; x++)
     {
-        sprintf(buf, " %c%d", x + 'A', getMotorPos(motors + x));
+        sprintf(buf, " %c%.2f", x + 'A', axes[x].getPos()); //getMotorPos(motors + x));
         sendText(buf);
     }
     return 0;
@@ -84,6 +86,14 @@ const char * setZero(const char * cmd)
     return 0;
 }
 
+const char * getSwitch(const char * cmd)
+{
+    char buf[20];
+    sprintf(buf, " switches: %X ", switches);
+    sendText(buf);
+    return 0;
+}
+
 const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
@@ -91,6 +101,7 @@ const char * onSimple(const char * cmd)
     else if(!strcmp(cmd, "reset")) method = reset;
     else if(!strcmp(cmd, "pos")) method = pos;
     else if(!strcmp(cmd, "zero")) method = setZero;
+    else if(!strcmp(cmd, "sw")) method = getSwitch;
     if(method)
     {
         if(command) commit();

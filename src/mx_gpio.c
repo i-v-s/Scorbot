@@ -95,6 +95,18 @@ void m3f()
     GPIOD->BRR = GPIO_Pin_2;
 }
 
+void m3r()
+{
+    GPIOD->BSRR = GPIO_Pin_2 | GPIO_Pin_3; //enabled
+    GPIOD->BRR = GPIO_Pin_1;
+}
+
+void m3s()
+{
+    GPIOD->BRR = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3; //enabled
+}
+
+
 void m4f()
 {
     GPIOD->BSRR = GPIO_Pin_6; //enabled
@@ -102,21 +114,10 @@ void m4f()
     GPIOD->BRR = GPIO_Pin_5;
 }
 		
-void m3r()
-{
-    GPIOD->BSRR = GPIO_Pin_2 | GPIO_Pin_3; //enabled
-    GPIOD->BRR = GPIO_Pin_1;
-}
-
 void m4r()
 {
     GPIOD->BSRR = GPIO_Pin_5 | GPIO_Pin_6; //enabled
     GPIOD->BRR = GPIO_Pin_4;
-}
-
-void m3s()
-{
-    GPIOD->BRR = GPIO_Pin_1 | GPIO_Pin_2 | GPIO_Pin_3; //enabled
 }
 
 void m4s()
@@ -145,6 +146,17 @@ void m5s()
     GPIOF->BRR = GPIO_Pin_6;
 }
 
+int a1sw()
+{
+    return GPIOD->IDR & GPIO_Pin_10;
+}
+
+int a2sw()
+{
+    return GPIOD->IDR & GPIO_Pin_9;
+}
+
+
 void mx_pinout_config(void) {
 	/* Private typedef ---------------------------------------------------------*/
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -154,7 +166,7 @@ void mx_pinout_config(void) {
 	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE|RCC_AHBPeriph_GPIOD|RCC_AHBPeriph_GPIOA|RCC_AHBPeriph_GPIOF|RCC_AHBPeriph_GPIOC|RCC_AHBPeriph_GPIOB, ENABLE);
 
 	/*Configure GPIO pin */
-	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_8|GPIO_Pin_10|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15|GPIO_Pin_0;
+	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15|GPIO_Pin_0;
 	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_OUT;
 	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
@@ -212,9 +224,11 @@ void mx_pinout_config(void) {
     
     initEncoder(motors + 1, TIM2);
     initMotor(motors + 1, m1f, m1r, m1s);
+    axes[1].getSwitch = a1sw;
     
     initEncoder(motors + 2, TIM1);
     initMotor(motors + 2, m2f, m2r, m2s);
+    axes[2].getSwitch = a2sw;
     
     initEncoder(motors + 3, TIM4);
     initMotor(motors + 3, m3f, m3r, m3s);

@@ -7072,6 +7072,9 @@
       <name>$PROJ_DIR$\..\src\mx_gpio.c</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\inc\mx_gpio.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\src\parser.c</name>
     </file>
     <file>

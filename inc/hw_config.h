@@ -43,6 +43,9 @@
 #define LED_ON                0xF0
 #define LED_OFF               0xFF
 
+#define SysTickFreq 100
+
+      
 /* Exported functions ------------------------------------------------------- */
 void Set_System(void);
 void Set_USBClock(void);
