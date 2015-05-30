@@ -62,7 +62,7 @@ const char * reset(const char * cmd)
 
 const char * pos(const char * cmd)
 {
-    sendText("Position:");
+    sendText("\nPos:");
     char buf[12];
     for(char x = 0; x < 6; x++)
     {
@@ -74,14 +74,13 @@ const char * pos(const char * cmd)
 
 const char * ptp(const char * cmd)
 {
-    sendText("PTP(");
+    sendText("\nPTP(");
     command = 1;
     return 0;
 }
 
 const char * setZero(const char * cmd)
 {
-    sendText("ZERO: ");
     nozero = 1;
     return 0;
 }
@@ -89,7 +88,7 @@ const char * setZero(const char * cmd)
 const char * getSwitch(const char * cmd)
 {
     char buf[20];
-    sprintf(buf, " switches: %X ", switches);
+    sprintf(buf, "\nSw: %X ", switches);
     sendText(buf);
     return 0;
 }

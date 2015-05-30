@@ -49,19 +49,6 @@ uint32_t Receive_length;
 /* Private functions ---------------------------------------------------------*/
 
 /*******************************************************************************
-* Function Name  : EP1_IN_Callback
-* Description    :
-* Input          : None.
-* Output         : None.
-* Return         : None.
-*******************************************************************************/
-
-void EP1_IN_Callback (void)
-{
-  packet_sent = 1;
-}
-
-/*******************************************************************************
 * Function Name  : EP3_OUT_Callback
 * Description    :
 * Input          : None.

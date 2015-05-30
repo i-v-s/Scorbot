@@ -109,7 +109,7 @@ void zero()
     //char buf[20];
     
     // Îñü B
-    sendText("B>> ");
+    sendText("\nZero: B>> ");
     motors[1].forward();
     int to = ticks + 30;
     for(int brk = zt, rv2 = zt; brk; brk--)

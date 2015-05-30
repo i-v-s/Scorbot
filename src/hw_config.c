@@ -197,6 +197,7 @@ void Leave_LowPowerMode(void)
   {
     /* Device configured */
     bDeviceState = CONFIGURED;
+    //onConfigured();/
   }
   else
   {
