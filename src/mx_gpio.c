@@ -157,6 +157,21 @@ int a2sw()
 }
 
 
+void EXTI9_5_IRQHandler(void)
+{
+    int a = GPIOF->IDR;
+    motors[5].pos -= (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    EXTI->PR = 1 << 9;
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+    int a = GPIOF->IDR;
+    motors[5].pos += (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    EXTI->PR = 1 << 10;
+}
+
+
 void mx_pinout_config(void) {
 	/* Private typedef ---------------------------------------------------------*/
 	GPIO_InitTypeDef GPIO_InitStruct;
@@ -237,7 +252,14 @@ void mx_pinout_config(void) {
     initMotor(motors + 4, m4f, m4r, m4s);
 
     initMotor(motors + 5, m5f, m5r, m5s);
+    // Конфигурируем прерывания для энкодера клешни:
+    EXTI->IMR |= (1 << 9) | (1 << 10);
+    EXTI->RTSR |= (1 << 9) | (1 << 10);
+    EXTI->FTSR |= (1 << 9) | (1 << 10);
     
+    SYSCFG->EXTICR[2] |= 0x0550;
+    NVIC->ISER[0] = 1 << 23;
+    NVIC->ISER[1] = 1 << 8;
     
 	/*Configure GPIO pin */
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_5 | GPIO_Pin_4 | GPIO_Pin_15;
