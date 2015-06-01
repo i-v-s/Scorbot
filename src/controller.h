@@ -21,6 +21,15 @@ typedef struct
     int (* getSwitch)();
 } Axis;
 
+typedef struct
+{
+    char axis;
+    float pos;
+} Command;
+
+extern Command program[64];
+extern Command * cmdPtr;
+
 extern Motor motors[6];
 extern Axis axes[6];
 

@@ -1,5 +1,6 @@
 #include <string.h>
 #include <stdlib.h>
+#include <math.h>
 #include <stdio.h>
 #include "host_io.h"
 #include <stdint.h>
@@ -15,11 +16,9 @@ extern uint16_t e[6];
 extern uint8_t nozero;
 
 int command = 0;
-struct Param
-{
-    char axis;
-    float pos;
-} params[10], * pc = params;
+Command params[10], * pc = params;
+
+Command * dstPtr = program;
 
 
 const char * commit()
@@ -31,6 +30,7 @@ const char * commit()
     {
     case 0: return 0;
     case 1:
+        pc->axis = 0;
         while(pc > params)
         {
             pc--;
@@ -50,13 +50,79 @@ const char * commit()
     return 0;
 }
 
-const char * save(const char * cmd)
+const char * run(const char * cmd)
 {
+    cmdPtr = program;
     return 0;
 }
 
-const char * reset(const char * cmd)
+float lastSaved[6];
+
+const char * list(const char * cmd)
 {
+    sendText("List:");
+    for(Command * p = program; p->axis; p++)
+        if(p->axis != ';')
+        {
+            char buf[20];
+            sprintf(buf, " %c%.2f", p->axis + 'A' - 'a', p->pos);
+            sendText(buf);
+        }
+        else
+            sendText("; ");
+    return 0;
+}
+
+const char * clear(const char * cmd)
+{
+    sendText("Cleared");
+    program->axis = 0;
+    dstPtr = program;
+    return 0;
+}
+
+const char * save(const char * cmd)
+{
+    //if(!params->axis) return 0;
+    /*for(Command * p = params; p->axis; p++)
+        *(dstPtr++) = *p;*/
+    //params->axis = 0;
+    Command * dp = dstPtr;
+    if(dstPtr == program)
+        for(int x = 0; x < 6; x++) // Пишем всё
+        {
+            dstPtr->axis = 'a' + x;
+            float pos = axes[x].getPos();
+            dstPtr->pos = pos;
+            lastSaved[x] = pos;
+            dstPtr++;
+        }
+    else
+        for(int x = 0; x < 6; x++) // Пишем отличия
+        {
+            float pos = axes[x].getPos();
+            if(fabs(pos - lastSaved[x]) < 1.0) continue;
+            dstPtr->axis = 'a' + x;
+            dstPtr->pos = pos;
+            lastSaved[x] = pos;
+            dstPtr++;
+        }
+    if(dstPtr == dp)
+    {
+        sendText("\nNothing to save");
+        return 0;
+    }
+    (dstPtr++)->axis = ';';
+    char buf[20];
+    sprintf(buf, "\nProgram size: %d ", dstPtr - program);
+    sendText(buf);
+    dstPtr->axis = 0;
+    return 0;
+}
+
+const char * stop(const char * cmd)
+{
+    cmdPtr = 0;
     return 0;
 }
 
@@ -97,7 +163,12 @@ const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
     if(!strcmp(cmd, "ptp")) method = ptp;
-    else if(!strcmp(cmd, "reset")) method = reset;
+    else if(!strcmp(cmd, "run")) method = run;
+    else if(!strcmp(cmd, "list")) method = list;
+    else if(!strcmp(cmd, "save")) method = save;
+    else if(!strcmp(cmd, "clear")) method = clear;
+    else if(!strcmp(cmd, "stop")) method = stop;
+    //else if(!strcmp(cmd, "off")) method = off;
     else if(!strcmp(cmd, "pos")) method = pos;
     else if(!strcmp(cmd, "zero")) method = setZero;
     else if(!strcmp(cmd, "sw")) method = getSwitch;
@@ -129,7 +200,7 @@ const char * onComplex(const char * name, const char * data)
         }
         if(c >= 'x' && c <= 'z') return 0;
     }
-    if(!strcmp(name, "save"))
+    /*if(!strcmp(name, "save"))
     {
         if(command) commit();
         int d = atoi(data);
@@ -137,7 +208,7 @@ const char * onComplex(const char * name, const char * data)
         sprintf(bf, "save %d", d);
         sendText(bf);
         return 0;
-    }
+    }*/
     return "Unknown name";
 }
 

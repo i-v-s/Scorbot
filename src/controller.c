@@ -267,20 +267,8 @@ void zero()
     return;
 }
 
-struct Param
-{
-    char axis;
-    int pos;
-} par[20] = 
-{
-    {0},
-    {'a', 200}, {'b', 300}, {';'},
-    {'a', -100}, {'b', 0}, {';'},
-    {'c', 500}, {';'},
-    {'d', 500}, {';'},
-    {'e', 500}, {';'},
-    {'a', 500}, {'c', 0}, {'d', 0}, {'e', 0}, {0}}, * pcp = par;
-
+Command program[64] = {0};
+Command * cmdPtr = 0;
 
 void ctlLoop()
 {
@@ -305,13 +293,15 @@ void ctlLoop()
         }
         if(m->time) ready = 0;
     }
-    if(ready && pcp->axis)
+    if(ready && cmdPtr && cmdPtr->axis)
     {
-        if(pcp->axis == ';') pcp++;
-        for( ; pcp->axis && pcp->axis != ';'; pcp++)
+        if(cmdPtr->axis == ';') cmdPtr++;
+        for( ; cmdPtr->axis && cmdPtr->axis != ';'; cmdPtr++)
         {
-            char a = pcp->axis;
-            if(a >= 'a' && a <= 'f') moveMotor(motors + a - 'a', pcp->pos);
+            char a = cmdPtr->axis;
+            if(a >= 'a' && a <= 'f') 
+                axes[a - 'a'].moveTo(cmdPtr->pos);
+                //moveMotor(motors + a - 'a', pcp->pos);
         }
     }
 }
