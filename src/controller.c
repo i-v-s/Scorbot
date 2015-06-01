@@ -7,17 +7,22 @@ Motor motors[6] = {0};
 
 #define Ascale 42.889 // шагов/градус
 #define Azero  -58 // шагов
+#define Bscale 33.022 // шагов/градус
+#define Bzero 1400
+#define Cscale 33.937
+#define Czero 149
+
 
 float Apos() { return (getMotorPos(motors + 0) - Azero) / Ascale;}
-float Bpos() { return -getMotorPos(motors + 1);}
-float Cpos() { return getMotorPos(motors + 2);}
+float Bpos() { return (-getMotorPos(motors + 1) - Bzero) / Bscale;}
+float Cpos() { return (getMotorPos(motors + 2) - Czero) / Cscale;}
 float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4)) / 2.0;}
 float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4)) / 2.0;}
 float Fpos() { return getMotorPos(motors + 5);}
 
 void Amove(float pos) { motors[0].ref = (int)(pos * Ascale) + Azero;}
-void Bmove(float pos) { motors[1].ref = -(int)pos;}
-void Cmove(float pos) { motors[2].ref = (int)pos;}
+void Bmove(float pos) { motors[1].ref = -(int)(pos * Bscale) - Bzero;}
+void Cmove(float pos) { motors[2].ref = (int)(pos * Cscale) + Czero;}
 
 void Dmove(float pos)
 { 
