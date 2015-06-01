@@ -38,6 +38,8 @@ void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
 
 void moveMotor(Motor * motor, int ref);
+void motorsOff(void);
+void motorsOn(void);
 
 void ctlLoop();
 void zero();

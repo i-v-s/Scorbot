@@ -108,6 +108,22 @@ void moveMotor(Motor * motor, int ref)
     else motor->reverse();
     motor->d = d;*/
 }
+
+char motorsEnabled = 1;
+
+void motorsOff(void)
+{
+    motorsEnabled = 0;
+    for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor); m++)
+        m->stop();
+}
+
+void motorsOn(void)
+{
+    motorsEnabled = 1;
+}
+
+
 #define timeOut 100
 #define zt 150
 
@@ -278,7 +294,7 @@ Command * cmdPtr = 0;
 void ctlLoop()
 {
     char ready = 1;
-    for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor); m++)
+    if(motorsEnabled) for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor); m++)
     {
         int d = m->ref - getMotorPos(m);
         if(d > m->prec) 

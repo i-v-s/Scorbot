@@ -126,6 +126,19 @@ const char * stop(const char * cmd)
     return 0;
 }
 
+const char * off(const char * cmd)
+{
+    motorsOff();
+    return 0;
+}
+
+const char * on(const char * cmd)
+{
+    motorsOn();
+    return 0;
+}
+
+
 const char * pos(const char * cmd)
 {
     sendText("\nPos:");
@@ -165,6 +178,8 @@ const char * onSimple(const char * cmd)
     if(!strcmp(cmd, "ptp")) method = ptp;
     else if(!strcmp(cmd, "run")) method = run;
     else if(!strcmp(cmd, "list")) method = list;
+    else if(!strcmp(cmd, "off")) method = off;
+    else if(!strcmp(cmd, "on")) method = on;
     else if(!strcmp(cmd, "save")) method = save;
     else if(!strcmp(cmd, "clear")) method = clear;
     else if(!strcmp(cmd, "stop")) method = stop;
