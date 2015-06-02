@@ -125,16 +125,39 @@ void motorsOn(void)
 
 
 #define timeOut 100
-#define zt 150
+#define zt 1000
+
+unsigned char testbf[1000];
+
+#define traceFwd(p) if(p > cp) { \
+    int k = total ? (on << 8) / total : 0; \
+    on = 0; total = 0; \
+    if(k < 128) \
+        stop = 0; \
+    else \
+        if(!stop) stop = cp + 100; \
+    cp = p; if(p == stop) break;}
+
+#define traceRvs(p) if(p < cp) { \
+    int k = total ? (on << 8) / total : 255; \
+    on = 0; total = 0; \
+    if(k < 128) \
+        break; \
+    cp = p;} \
+
+#define initTrace(tm) on = 0; total = 0; to = ticks + (tm)
+#define initRvs(tm) on = 0; total = 0; to = ticks + (tm); r = 0
+#define calcOn(mask) total++; sum += p; if(switches & mask) on++
 
 void zero()
 {
     //char buf[20];
-    
+    int to, cp, total, on, stop, sum;
+    char r;
     // Ось B
     sendText("\nZero: B>> ");
     motors[1].forward();
-    int to = ticks + 30;
+    to = ticks + 30;
     for(int brk = zt, rv2 = zt; brk; brk--)
     {
         int sw = switches;
@@ -189,7 +212,7 @@ void zero()
     sendText("A>> ");
     motors[0].forward();
     to = ticks + 10;
-    char r = 0;
+    r = 0;
     for(int brk = zt; brk; brk--)
     {
         if(!(switches & 8)) brk = zt;
@@ -219,47 +242,90 @@ void zero()
     setMotorPos(motors + 0, 0);
     sendText("Aok ");
     
+    /*motors[3].forward();
+    motors[4].forward();
+    memset(testbf, 0, sizeof(testbf));
+    int mp, total = 0, on = 0, cp = 0;
+    do
+    {
+        mp = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+        if(mp > cp)
+        {
+            int res = total ? (on << 7) / total : 0;
+            if(res > 255) res = 255;
+            if(res == 0) res = 1;
+            testbf[cp] = res;
+            cp = mp;
+            total = 0;
+            on = 0;
+        }
+        //testbf[mp] += switches & 1;
+        total++;
+        if(switches & 1) on++;
+    }
+    while(mp < 1000);
+    motors[3].stop();
+    motors[4].stop();*/
+    
     // Ось D
     sendText("D>> ");
     motors[3].forward();
     motors[4].forward();
-    r = 0;
-    to = ticks + 10;
-    for(int brk = zt; brk; brk--)
+    initTrace(30);
+    while(1)
     {
-        if(!(switches & 1)) brk = zt;
-        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) // Время прошло, а двигатель не крутится
-        {
-            if(r)
-            {
-                sendText("D no move ");
-                motors[3].stop();
-                motors[4].stop();
-                return;
-            } 
-            else
-            { // Разворачиваем
-                motors[3].reverse();
-                motors[4].reverse();
-                sendText("D! D<< ");
-                to = ticks + 10;
-                r = 1;
-            }
-        }
+        int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+        traceFwd(p);
+        calcOn(1);
+        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { sendText("D! "); break;}
     }
+    motors[3].stop();
+    motors[4].stop();
+    while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
     sendText("D<< ");
     motors[3].reverse();
     motors[4].reverse();
-    for(int brk = zt; brk; brk--)
-        if(switches & 1) brk = zt;
+    initRvs(30);
+    r = 10;
+    cp = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+    int steps = 0;
+    while(1)
+    {
+        int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+        //traceRvs(p);
+        if(p < cp) 
+        {
+            int k = total ? (on << 8) / total : 255;
+            if(k > 200) {if(r > 5) r--; else r = 5;}
+            if(k < 50 && r <= 5) 
+            {
+                if(r == 5 && total) steps = sum / total;
+                r--;
+                if(!r) break;
+            }
+            on = 0; total = 0; sum = 0;
+            cp = p;
+        }
+        calcOn(1);
+        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) 
+        { 
+            sendText("D! fail "); 
+            motors[3].stop();
+            motors[4].stop();
+            return;
+        }
+    }
+    
     motors[3].stop();
     motors[4].stop();
-    setMotorPos(motors + 3, 0);
-    setMotorPos(motors + 4, 0);
+    while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
+    setMotorPos(motors + 3, getMotorPos(motors + 3) - (steps >> 2));
+    setMotorPos(motors + 4, getMotorPos(motors + 4) - (steps >> 2));
+    
     sendText("Dok ");
     
     // Ось E
-    sendText("E>> ");
+    /*sendText("E>> ");
     motors[4].reverse();
     motors[3].forward();
     for(int brk = zt; brk; brk--)
@@ -278,7 +344,7 @@ void zero()
     
     //setMotorPos(motors + 3, 0);
     //setMotorPos(motors + 4, 0);
-    sendText("Eok ");
+    sendText("Eok ");*/
     
     
     //sprintf(buf, "sw:(%X) ", switches);
