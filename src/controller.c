@@ -5,24 +5,23 @@
 
 Motor motors[6] = {0};
 
-#define Ascale 42.889 // шагов/градус
-#define Azero  -58 // шагов
-#define Bscale 33.022 // шагов/градус
-#define Bzero 1400
-#define Cscale 33.937
-#define Czero 149
+#define axisA (axes + 0)
+#define axisB (axes + 1)
+#define axisC (axes + 2)
+#define axisD (axes + 3)
+#define axisE (axes + 4)
+#define axisF (axes + 5)
 
-
-float Apos() { return (getMotorPos(motors + 0) - Azero) / Ascale;}
-float Bpos() { return (-getMotorPos(motors + 1) - Bzero) / Bscale;}
-float Cpos() { return (getMotorPos(motors + 2) - Czero) / Cscale;}
+float Apos() { return (getMotorPos(motors + 0) - axisA->zero) / axisA->scale;}
+float Bpos() { return (-getMotorPos(motors + 1) - axisB->zero) / axisB->scale;}
+float Cpos() { return (getMotorPos(motors + 2) - axisC->zero) / axisC->scale;}
 float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4)) / 2.0;}
 float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4)) / 2.0;}
-float Fpos() { return getMotorPos(motors + 5);}
+float Fpos() { return (getMotorPos(motors + 5) - axisF->zero) / axisF->scale;}
 
-void Amove(float pos) { motors[0].ref = (int)(pos * Ascale) + Azero;}
-void Bmove(float pos) { motors[1].ref = -(int)(pos * Bscale) - Bzero;}
-void Cmove(float pos) { motors[2].ref = (int)(pos * Cscale) + Czero;}
+void Amove(float pos) { motors[0].ref = (int)(pos * axisA->scale) + axisA->zero;}
+void Bmove(float pos) { motors[1].ref = -(int)(pos * axisB->scale) - axisB->zero;}
+void Cmove(float pos) { motors[2].ref = (int)(pos * axisC->scale) + axisC->zero;}
 
 void Dmove(float pos)
 { 
@@ -40,20 +39,19 @@ void Emove(float pos)
     motors[4].ref = s - p;
 }
 
-void Fmove(float pos) { motors[5].ref = (int)pos;}
+void Fmove(float pos) { motors[5].ref = (int)(pos * axisF->scale) + axisF->zero;}
 
 Axis axes[6] = 
-{
-    {Apos, Amove},
-    {Bpos, Bmove},
-    {Cpos, Cmove},
+{ //               ш/ед   ноль
+    {Apos, Amove, 42.889,  -58},
+    {Bpos, Bmove, 33.022, 1400},
+    {Cpos, Cmove, 33.937,  149},
     {Dpos, Dmove},
     {Epos, Emove},
-    {Fpos, Fmove}
+    {Fpos, Fmove, 16.000,    0}
 };
+
 volatile int ticks = 0;
-
-
 
 void initEncoder(Motor * motor, TIM_TypeDef * timer)
 {

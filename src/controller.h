@@ -18,6 +18,8 @@ typedef struct
 {
     float (* getPos)();
     void (* moveTo)(float pos);
+    float scale;
+    int zero;
     int (* getSwitch)();
 } Axis;
 
