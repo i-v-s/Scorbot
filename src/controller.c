@@ -450,9 +450,10 @@ void ctlLoop()
     }
 
     if(!notReady && cmdPtr && cmdPtr->axis)
-    {
+    { 
         if(cmdPtr->axis == nextCmd) cmdPtr++;
         for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
             cmdPtr->axis->moveTo(cmdPtr->pos);
+        if(!cmdPtr->axis) cmdPtr = 0;
     }
 }
