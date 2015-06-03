@@ -155,8 +155,19 @@ void zero()
     //char buf[20];
     int to, cp, total, on, stop, sum;
     char r;
+
+    // Ось F клешня
+    sendText("\nZero: F<< ");
+    motors[5].reverse();
+    to = ticks + 10;
+    
+    while(ticks < to || motors[5].rate < -20);
+    motors[5].stop();
+    sendText("F! Fok ");
+    setMotorPos(motors + 5, -50);    
+    
     // Ось B
-    sendText("\nZero: B>> ");
+    sendText("B>> ");
     motors[1].forward();
     to = ticks + 30;
     for(int brk = zt, rv2 = zt; brk; brk--)
