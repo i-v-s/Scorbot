@@ -25,7 +25,7 @@ typedef struct
 
 typedef struct
 {
-    char axis;
+    Axis * axis;
     float pos;
 } Command;
 
@@ -33,7 +33,17 @@ extern Command program[64];
 extern Command * cmdPtr;
 
 extern Motor motors[6];
-extern Axis axes[6];
+extern Axis axes[7];
+extern const char axisNames[];
+
+#define axisA (axes + 0)
+#define axisB (axes + 1)
+#define axisC (axes + 2)
+#define axisD (axes + 3)
+#define axisE (axes + 4)
+#define axisF (axes + 5)
+#define axisH (axes + 6)
+#define nextCmd ((Axis *) 1)
 
 int getMotorPos(Motor * motor);
 void initEncoder(Motor * motor, TIM_TypeDef * timer);

@@ -3,14 +3,9 @@
 #include "host_io.h"
 #include "hw_config.h"
 
-Motor motors[6] = {0};
+volatile int ticks = 0;
 
-#define axisA (axes + 0)
-#define axisB (axes + 1)
-#define axisC (axes + 2)
-#define axisD (axes + 3)
-#define axisE (axes + 4)
-#define axisF (axes + 5)
+Motor motors[6] = {0};
 
 float Apos() { return (getMotorPos(motors + 0) - axisA->zero) / axisA->scale;}
 float Bpos() { return (-getMotorPos(motors + 1) - axisB->zero) / axisB->scale;}
@@ -40,18 +35,33 @@ void Emove(float pos)
 }
 
 void Fmove(float pos) { motors[5].ref = (int)(pos * axisF->scale) + axisF->zero;}
+unsigned char hold = 0;
 
-Axis axes[6] = 
+void Hmove(float pos) 
+{
+    Motor * m = motors + 5;
+    hold = (char)(pos * 255);
+    if(hold)
+    {
+        m->forward();
+        m->time = ticks + 5;
+    }
+}
+
+float Hpos() { return (float)hold / 255.0;}
+
+Axis axes[7] = 
 { //               ш/ед   ноль
     {Apos, Amove, 42.889,  -58},
     {Bpos, Bmove, 33.022, 1400},
     {Cpos, Cmove, 33.937,  149},
     {Dpos, Dmove},
     {Epos, Emove},
-    {Fpos, Fmove, 16.000,    0}
+    {Fpos, Fmove,  8.000,    0},
+    {Hpos, Hmove}
 };
 
-volatile int ticks = 0;
+const char axisNames[] = "abcdefh";
 
 void initEncoder(Motor * motor, TIM_TypeDef * timer)
 {
@@ -101,11 +111,6 @@ void SysTick_Handler(void)
 void moveMotor(Motor * motor, int ref)
 {
     motor->ref = ref;
-    /*int d = ref - getMotorPos(motor);
-    if(!d) motor->stop();
-    else if(d > 0) motor->forward();
-    else motor->reverse();
-    motor->d = d;*/
 }
 
 char motorsEnabled = 1;
@@ -367,38 +372,59 @@ void zero()
 Command program[64] = {0};
 Command * cmdPtr = 0;
 
+int ctlMotor(Motor * m)
+{
+    int d = m->ref - getMotorPos(m);
+    if(d > m->prec) 
+    {
+        m->forward();
+        m->time = timeOut;
+    }
+    else if(d < -m->prec)
+    {
+        m->reverse();
+        m->time = timeOut;
+    }
+    else
+    {
+        m->stop();
+        if(m->time > 0) m->time--;
+    }
+    return m->time;
+}
+
+int ctlHold(Motor * m)
+{
+    if(m->rate > 20)
+    {
+        m->time = ticks + 5;
+        return 1;
+    }
+    if(ticks > m->time)
+    {
+        //m->stop();
+        return 0;
+    }
+    return 1;
+}
+
 void ctlLoop()
 {
-    char ready = 1;
-    if(motorsEnabled) for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor); m++)
+    int notReady = 0;
+    if(motorsEnabled) 
     {
-        int d = m->ref - getMotorPos(m);
-        if(d > m->prec) 
-        {
-            m->forward();
-            m->time = timeOut;
-        }
-        else if(d < -m->prec)
-        {
-            m->reverse();
-            m->time = timeOut;
-        }
+        for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
+            notReady |= ctlMotor(m);
+        if(hold)
+            notReady |= ctlHold(motors + 5);
         else
-        {
-            m->stop();
-            if(m->time > 0) m->time--;
-        }
-        if(m->time) ready = 0;
+            notReady |= ctlMotor(motors + 5);
     }
-    if(ready && cmdPtr && cmdPtr->axis)
+
+    if(!notReady && cmdPtr && cmdPtr->axis)
     {
-        if(cmdPtr->axis == ';') cmdPtr++;
-        for( ; cmdPtr->axis && cmdPtr->axis != ';'; cmdPtr++)
-        {
-            char a = cmdPtr->axis;
-            if(a >= 'a' && a <= 'f') 
-                axes[a - 'a'].moveTo(cmdPtr->pos);
-                //moveMotor(motors + a - 'a', pcp->pos);
-        }
+        if(cmdPtr->axis == nextCmd) cmdPtr++;
+        for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
+            cmdPtr->axis->moveTo(cmdPtr->pos);
     }
 }

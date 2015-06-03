@@ -20,7 +20,6 @@ Command params[10], * pc = params;
 
 Command * dstPtr = program;
 
-
 const char * commit()
 {
     char buf[20];
@@ -34,15 +33,7 @@ const char * commit()
         while(pc > params)
         {
             pc--;
-            char a = pc->axis;
-            if(a >= 'a' && a <= 'f')
-            {
-                a -= 'a';
-                axes[a].moveTo(pc->pos);
-                //moveMotor(motors + a, (int)pc->pos);
-                //rab[a] = 1;
-                //e[a] = (int)pc->pos;
-            }
+            pc->axis->moveTo(pc->pos);
         }
     }
     command = 0;
@@ -50,22 +41,22 @@ const char * commit()
     return 0;
 }
 
-const char * run(const char * cmd)
+const char * go(const char * cmd)
 {
     cmdPtr = program;
     return 0;
 }
 
-float lastSaved[6];
+float lastSaved[7];
 
 const char * list(const char * cmd)
 {
     sendText("List:");
     for(Command * p = program; p->axis; p++)
-        if(p->axis != ';')
+        if(p->axis != nextCmd)
         {
             char buf[20];
-            sprintf(buf, " %c%.2f", p->axis + 'A' - 'a', p->pos);
+            sprintf(buf, " %c%.2f", axisNames[p->axis - axes] + ('A' - 'a'), p->pos);
             sendText(buf);
         }
         else
@@ -83,26 +74,24 @@ const char * clear(const char * cmd)
 
 const char * save(const char * cmd)
 {
-    //if(!params->axis) return 0;
-    /*for(Command * p = params; p->axis; p++)
-        *(dstPtr++) = *p;*/
-    //params->axis = 0;
     Command * dp = dstPtr;
     if(dstPtr == program)
-        for(int x = 0; x < 6; x++) // Пишем всё
+        for(int x = 0; x < sizeof(axes) / sizeof(Axis); x++) // Пишем всё
         {
-            dstPtr->axis = 'a' + x;
+            dstPtr->axis = axes + x;
             float pos = axes[x].getPos();
             dstPtr->pos = pos;
             lastSaved[x] = pos;
             dstPtr++;
         }
     else
-        for(int x = 0; x < 6; x++) // Пишем отличия
+        for(int x = 0; x < sizeof(axes) / sizeof(Axis); x++) // Пишем отличия
         {
-            float pos = axes[x].getPos();
+            Axis * a = axes + x;
+            if(a == axisF && axisH->getPos()) continue;
+            float pos = a->getPos();
             if(fabs(pos - lastSaved[x]) < 1.0) continue;
-            dstPtr->axis = 'a' + x;
+            dstPtr->axis = a;
             dstPtr->pos = pos;
             lastSaved[x] = pos;
             dstPtr++;
@@ -112,7 +101,7 @@ const char * save(const char * cmd)
         sendText("\nNothing to save");
         return 0;
     }
-    (dstPtr++)->axis = ';';
+    (dstPtr++)->axis = nextCmd;
     char buf[20];
     sprintf(buf, "\nProgram size: %d ", dstPtr - program);
     sendText(buf);
@@ -138,14 +127,25 @@ const char * on(const char * cmd)
     return 0;
 }
 
+const char * get(const char * cmd)
+{
+    axisH->moveTo(1.0);
+    return 0;
+}
+
+const char * put(const char * cmd)
+{
+    axisH->moveTo(0.0);
+    return 0;
+}
 
 const char * pos(const char * cmd)
 {
     sendText("\nPos:");
     char buf[12];
-    for(char x = 0; x < 6; x++)
+    for(char x = 0; x < sizeof(axes) / sizeof(Axis); x++)
     {
-        sprintf(buf, " %c%.2f", x + 'A', axes[x].getPos()); //getMotorPos(motors + x));
+        sprintf(buf, " %c%.2f", axisNames[x] + ('A' - 'a'), axes[x].getPos());
         sendText(buf);
     }
     return 0;
@@ -176,15 +176,16 @@ const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
     if(!strcmp(cmd, "ptp")) method = ptp;
-    else if(!strcmp(cmd, "run")) method = run;
+    else if(!strcmp(cmd, "go")) method = go;
     else if(!strcmp(cmd, "list")) method = list;
     else if(!strcmp(cmd, "off")) method = off;
     else if(!strcmp(cmd, "on")) method = on;
     else if(!strcmp(cmd, "save")) method = save;
     else if(!strcmp(cmd, "clear")) method = clear;
     else if(!strcmp(cmd, "stop")) method = stop;
-    //else if(!strcmp(cmd, "off")) method = off;
     else if(!strcmp(cmd, "pos")) method = pos;
+    else if(!strcmp(cmd, "get")) method = get;
+    else if(!strcmp(cmd, "put")) method = put;
     else if(!strcmp(cmd, "zero")) method = setZero;
     else if(!strcmp(cmd, "sw")) method = getSwitch;
     if(method)
@@ -202,32 +203,20 @@ const char * onComplex(const char * name, const char * data)
     if(c && !name[1])
     {
         float f = atof(data);
-        if(c >= 'a' && c <= 'f') 
+        for(const char * t = axisNames; *t; t++) if(c == *t)
         {
             char bf[20];
-            sprintf(bf, "%c%f ", c + 'A' - 'a', f);
+            sprintf(bf, "%c%.2f ", c + 'A' - 'a', f);
             
-            pc->axis = c;
+            pc->axis = axes + (t - axisNames);
             pc->pos = f;
             pc++;
             sendText(bf);
             return 0;
         }
-        if(c >= 'x' && c <= 'z') return 0;
     }
-    /*if(!strcmp(name, "save"))
-    {
-        if(command) commit();
-        int d = atoi(data);
-        char bf[20];
-        sprintf(bf, "save %d", d);
-        sendText(bf);
-        return 0;
-    }*/
     return "Unknown name";
 }
-
-//char 
 
 const char * parse(const unsigned char * data, const unsigned char * end)
 {    
