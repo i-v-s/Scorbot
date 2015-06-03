@@ -4,10 +4,10 @@ typedef struct
 {
     TIM_TypeDef * timer;
     int prec; // Допуск позиционирования
-    int pos; // Текущая позиция (если не в timer)
+    volatile int pos; // Текущая позиция (если не в timer)
     int ref; // Заданная позиция
     int time;
-    int rate; // Скорость
+    volatile int rate; // Скорость
     int oldPos; // Предыдущая позиция
     void (* forward)();
     void (* reverse)();

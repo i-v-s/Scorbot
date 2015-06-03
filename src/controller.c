@@ -51,7 +51,7 @@ Axis axes[6] =
     {Epos, Emove},
     {Fpos, Fmove}
 };
-int ticks = 0;
+volatile int ticks = 0;
 
 
 
@@ -94,7 +94,8 @@ void SysTick_Handler(void)
         int pos = getMotorPos(m);
         int d = pos - m->oldPos;
         m->oldPos = pos;
-        m->rate -= (m->rate - d * SysTickFreq) >> 3;
+        int rate = m->rate;
+        m->rate = rate - ((rate - d * SysTickFreq) >> 3);
     }   
     GPIOE->ODR = 0x4F00 & ~GPIOD->IDR;
 }
