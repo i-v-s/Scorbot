@@ -156,18 +156,27 @@ int a2sw()
     return GPIOD->IDR & GPIO_Pin_9;
 }
 
+int oldf = 0;
+void count5(void)
+{
+    int a = GPIOF->IDR >> 9;
+    motors[5].pos -= ((a ^ (oldf >> 1)) & 1) - ((oldf ^ (a >> 1)) & 1);
+    oldf = a;
+}
 
 void EXTI9_5_IRQHandler(void)
 {
-    int a = GPIOF->IDR;
-    motors[5].pos -= (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    //int a = GPIOF->IDR;
+    //motors[5].pos -= (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    count5();
     EXTI->PR = 1 << 9;
 }
 
 void EXTI15_10_IRQHandler(void)
 {
-    int a = GPIOF->IDR;
-    motors[5].pos += (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    //int a = GPIOF->IDR;
+    //motors[5].pos += (((a ^ (a >> 1)) >> 8) & 2) - 1;
+    count5();
     EXTI->PR = 1 << 10;
 }
 
