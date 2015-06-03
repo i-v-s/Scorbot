@@ -10,8 +10,8 @@ Motor motors[6] = {0};
 float Apos() { return (getMotorPos(motors + 0) - axisA->zero) / axisA->scale;}
 float Bpos() { return (-getMotorPos(motors + 1) - axisB->zero) / axisB->scale;}
 float Cpos() { return (getMotorPos(motors + 2) - axisC->zero) / axisC->scale;}
-float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4)) / 2.0;}
-float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4)) / 2.0;}
+float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4) - (axisD->zero << 1)) / (2.0 * axisD->scale);}
+float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4) - (axisE->zero << 1)) / (2.0 * axisD->scale);}
 float Fpos() { return (getMotorPos(motors + 5) - axisF->zero) / axisF->scale;}
 
 void Amove(float pos) { motors[0].ref = (int)(pos * axisA->scale) + axisA->zero;}
@@ -20,7 +20,7 @@ void Cmove(float pos) { motors[2].ref = (int)(pos * axisC->scale) + axisC->zero;
 
 void Dmove(float pos)
 { 
-    int p = (int) pos;
+    int p = (int) (pos * axisD->scale) + axisD->zero;
     int d = motors[3].ref - motors[4].ref;
     motors[3].ref = p + d;
     motors[4].ref = p - d;
@@ -28,7 +28,7 @@ void Dmove(float pos)
 
 void Emove(float pos)
 { 
-    int p = (int) pos;
+    int p = (int) (pos * axisE->scale) + axisE->zero;
     int s = motors[3].ref + motors[4].ref;
     motors[3].ref = s + p;
     motors[4].ref = s - p;
@@ -51,13 +51,13 @@ void Hmove(float pos)
 float Hpos() { return (float)hold / 255.0;}
 
 Axis axes[7] = 
-{ //               ш/ед   ноль
-    {Apos, Amove, 42.889,  -58},
-    {Bpos, Bmove, 33.022, 1400},
-    {Cpos, Cmove, 33.937,  149},
-    {Dpos, Dmove},
-    {Epos, Emove},
-    {Fpos, Fmove,  8.000,    0},
+{ //               ш/ед     ноль
+    {Apos, Amove, 42.88900,  -58},
+    {Bpos, Bmove, 33.02200, 1400},
+    {Cpos, Cmove, 33.93700,  149},
+    {Dpos, Dmove, -8.33333,   40},
+    {Epos, Emove,  4.16666,  -20},
+    {Fpos, Fmove,  8.00000,    0},
     {Hpos, Hmove}
 };
 
@@ -334,23 +334,54 @@ void zero()
     motors[3].stop();
     motors[4].stop();
     while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
+    initRvs(30);
+    
+    
     setMotorPos(motors + 3, getMotorPos(motors + 3) - (steps >> 2));
     setMotorPos(motors + 4, getMotorPos(motors + 4) - (steps >> 2));
     
     sendText("Dok ");
     
     // ќсь E
-    /*sendText("E>> ");
+    sendText("E>> ");
     motors[4].reverse();
     motors[3].forward();
-    for(int brk = zt; brk; brk--)
-        if(!(switches & 0x40)) brk = zt;
+    initTrace(30);
+    while(1)
+    {
+        int p = getMotorPos(motors + 3) - getMotorPos(motors + 4);
+        traceFwd(p);
+        calcOn(0x40);
+    }
+    motors[3].stop();
+    motors[4].stop();
+    while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
+    
     sendText("E<< ");
     motors[4].forward();
     motors[3].reverse();
-    for(int brk = zt; brk; brk--)
-        if(switches & 0x40) brk = zt;
-        
+    initRvs(30);
+    r = 10;
+    while(1)
+    {
+        int p = getMotorPos(motors + 3) - getMotorPos(motors + 4);
+        //traceRvs(p);
+        if(p < cp) 
+        {
+            int k = total ? (on << 8) / total : 255;
+            if(k > 200) {if(r > 5) r--; else r = 5;}
+            if(k < 50 && r <= 5) 
+            {
+                if(r == 5 && total) steps = sum / total;
+                r--;
+                if(!r) break;
+            }
+            on = 0; total = 0; sum = 0;
+            cp = p;
+        }
+        calcOn(0x40);
+    }
+    
     motors[3].stop();
     motors[4].stop();
     int d = (getMotorPos(motors + 3) + getMotorPos(motors + 4)) >> 1;
@@ -359,11 +390,8 @@ void zero()
     
     //setMotorPos(motors + 3, 0);
     //setMotorPos(motors + 4, 0);
-    sendText("Eok ");*/
+    sendText("Eok ");
     
-    
-    //sprintf(buf, "sw:(%X) ", switches);
-    //sendText(buf);
     motors[1].stop();
     motors[2].stop();
     return;
