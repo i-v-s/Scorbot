@@ -58,3 +58,4 @@ void motorsOn(void);
 void ctlLoop();
 char zero(char noZero);
 char pushCommand(Command * cmd);
+void allStop();

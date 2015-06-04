@@ -2,7 +2,7 @@
 
 "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\bin\armstlink.dll" 
 
-"C:\PROGS\ARM\Scorbot\EWARM\STM32303C_EVAL\Exe\VirtualComport_Loopback.out" 
+"D:\projects\firmware1.1\STM32_USB-FS-Device_Lib_V4.0.0\Projects\VirtualComport_Loopback\EWARM\STM32303C_EVAL\Exe\VirtualComport_Loopback.out" 
 
 --plugin "C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\arm\bin\armbat.dll" 
 

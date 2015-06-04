@@ -108,7 +108,7 @@ const char * save(const char * cmd)
 
 const char * stop(const char * cmd)
 {
-    cmdPtr = 0;
+    allStop();
     return 0;
 }
 

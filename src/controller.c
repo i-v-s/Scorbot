@@ -198,6 +198,17 @@ char pushCommand(Command * cmd)
     return 1;
 }
 
+void allStop()
+{
+    for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
+    {
+        m->stop();
+        m->ref = getMotorPos(m);
+    }
+    cmdSrc = commands;
+    cmdDst = commands;
+    cmdPtr = 0;
+}
 
 void runCmd() 
 {               // Читаем команду
@@ -235,11 +246,5 @@ void ctlLoop()
     else
         if(motorsEnabled) notReady |= ctlMotor(motors + 5);
 
-    if(!notReady) runCmd();/* && cmdPtr && cmdPtr->axis)
-    { 
-        if(cmdPtr->axis == nextCmd) cmdPtr++;
-        for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
-            cmdPtr->axis->moveTo(cmdPtr->pos);
-        if(!cmdPtr->axis) cmdPtr = 0;
-    }*/
+    if(motorsEnabled && !notReady) runCmd();
 }

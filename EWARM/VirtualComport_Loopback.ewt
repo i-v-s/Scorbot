@@ -7304,11 +7304,11 @@
         <debug>1</debug>
         <option>
           <name>GenRtcDebugHeap</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenRtcEnableBoundsChecking</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenRtcCheckPtrsNonInstrMem</name>
@@ -7332,7 +7332,7 @@
         </option>
         <option>
           <name>GenRtcIntOverflow</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenRtcIncUnsigned</name>
@@ -7692,6 +7692,9 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_pwr.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\zero.c</name>
     </file>
   </group>
   <file>
