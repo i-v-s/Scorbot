@@ -25,22 +25,7 @@
 #include "host_io.h"
 #include "controller.h"
 
-// константы для счета энкодеров
-//#define CORRECT1         (5)  /*<! константа для коррекции данных энкодера 1 (платформа) */
-//#define CORRECT2         (5)  /*<! константа для коррекции данных энкодера 2 */
-//#define CORRECT3         (5)  /*<! константа для коррекции данных энкодера 3 */
-//#define CORRECT4         (5)  /*<! константа для коррекции данных энкодера 4 */
-//#define CORRECT5         (5)  /*<! константа для коррекции данных энкодера 5 */
-//#define CORRECT6         (2)  /*<! константа для коррекции данных энкодера 6 (клешня) */
-
-//variables
-int c=0;//для счета
-uint16_t rel;//для счета
-int relativ; //очередная переменная вникуда
-//uint16_t cnt_3;//счет энкодера #3
-uint8_t monit = 0;//анализ номера энкодера
-//uint8_t num_enc;// удалить вместе с GetRelative function
-uint8_t nozero = 1;
+uint8_t noZero = 0x3F;
 
 //enc_prg
 	uint8_t EncState[6]; //предыдущее состояние энкодера
@@ -98,7 +83,7 @@ uint32_t packet_receive=1;
 /* Private function prototypes -----------------------------------------------*/
 void init_gpio(void);
 void init_timer(void);
-void zero(void);
+char zero(char noZero);
 void platform(uint8_t x);
 //void EncInit(void);
 void delay_d(void);
@@ -119,10 +104,10 @@ int main(void)
    
     while(1)
     {
-		if(nozero)
+		if(noZero)
 		{
-			zero(); 
-			nozero = 0;
+			zero(noZero); 
+            noZero = 0;
 		}
         ctlLoop();
 					
@@ -143,72 +128,6 @@ int main(void)
             }
         }						
     }
-}
-
-
-//2 -- клешня закрывается, 1 -- клешня открывается, 0 -- клешня стоп
-void claw(uint8_t x){
-	
-	switch (x)
-	{
-		case 2:
-				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
-                GPIOF->BSRR = GPIO_Pin_6;
-				break;
-		
-		case 1:  
-				GPIOC->BSRR = GPIO_Pin_9; //enabled
-                GPIOA->BSRR = GPIO_Pin_5;//GPIO_Pin_13; //move
-                GPIOF->BRR = GPIO_Pin_6;
-				break;
-		
-		case 0:  
-				GPIOC->BRR = GPIO_Pin_9; //enabled
-                GPIOA->BRR = GPIO_Pin_5;//GPIO_Pin_13; //move
-                GPIOF->BRR = GPIO_Pin_6;
-				break;
-	}
-}
-
-
-void EncClaw(void){ //обработка энкодера #6 (claw)
-
-	uint8_t New;
-	uint16_t t3 = GPIO_ReadInputData(GPIOF);
-	New = (t3>>9) & 0x03;//состояние энкодера
- 
-					switch(EncState[5])
-						{
-						case 2:
-							{
-							if(New == 3) encData[5]++;
-							if(New == 0) encData[5]--; 
-							break;
-							}
-
-						case 0:
-							{
-							if(New == 2) encData[5]++;
-							if(New == 1) encData[5]--;
-							break;
-							}
-						case 1:
-							{
-							if(New == 0) encData[5]++;
-							if(New == 3) encData[5]--;
-							break;
-							}
-						case 3:
-							{
-							if(New == 1) encData[5]++;
-							if(New == 2) encData[5]--; 
-							break;
-							}
-						}
-	
-	EncState[5] = New;		// запись нового значения
-				// предыдущего состояния
 }
 
 #ifdef USE_FULL_ASSERT

@@ -7,7 +7,7 @@
 #include "usb_pwr.h"
 #include <string.h>
 
-char out[128];
+char out[256];
 char * volatile outSrc = out, * volatile outDst = out;
 char outState = 1;
 

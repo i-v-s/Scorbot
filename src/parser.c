@@ -13,7 +13,7 @@ char num[16], * np = num;
 extern uint16_t encData[6];
 extern uint8_t rab[6];
 extern uint16_t e[6];
-extern uint8_t nozero;
+extern uint8_t noZero;
 
 int command = 0;
 Command params[10], * pc = params;
@@ -160,7 +160,7 @@ const char * ptp(const char * cmd)
 
 const char * setZero(const char * cmd)
 {
-    nozero = 1;
+    noZero = 0x3F;
     return 0;
 }
 

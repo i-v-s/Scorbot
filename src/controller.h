@@ -35,6 +35,7 @@ extern Command * cmdPtr;
 extern Motor motors[6];
 extern Axis axes[7];
 extern const char axisNames[];
+extern volatile int ticks;
 
 #define axisA (axes + 0)
 #define axisB (axes + 1)
@@ -48,10 +49,11 @@ extern const char axisNames[];
 int getMotorPos(Motor * motor);
 void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
+void setMotorPos(Motor * motor, int pos);
 
 void moveMotor(Motor * motor, int ref);
 void motorsOff(void);
 void motorsOn(void);
 
 void ctlLoop();
-void zero();
+char zero(char noZero);
