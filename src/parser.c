@@ -30,11 +30,8 @@ const char * commit()
     case 0: return 0;
     case 1:
         pc->axis = 0;
-        while(pc > params)
-        {
-            pc--;
-            pc->axis->moveTo(pc->pos);
-        }
+        pc = params;
+        if(!pushCommand(params)) sendText("\nUnable to send command");
     }
     command = 0;
     sendText(")");
@@ -129,13 +126,15 @@ const char * on(const char * cmd)
 
 const char * get(const char * cmd)
 {
-    axisH->moveTo(1.0);
+    Command c[2] = {{axisH, 1.0}, {0}};
+    pushCommand(c);
     return 0;
 }
 
 const char * put(const char * cmd)
 {
-    axisH->moveTo(0.0);
+    Command c[2] = {{axisH, 0.0}, {0}};
+    pushCommand(c);
     return 0;
 }
 

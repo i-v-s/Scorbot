@@ -2,6 +2,8 @@
 #include <stdlib.h>
 #include "host_io.h"
 #include "hw_config.h"
+#include <string.h>
+
 
 volatile int ticks = 0;
 
@@ -168,24 +170,76 @@ int ctlHold(Motor * m)
     return 1;
 }
 
+Command commands[64];
+Command * volatile cmdSrc = commands, * volatile cmdDst = commands;
+
+char pushCommand(Command * cmd)
+{
+    int len = 0;
+    for(Command * t = cmd; t->axis; t++) len++;
+    
+    Command * s = cmdSrc, * d = cmdDst;
+    int empty = (s - d - 2) & (sizeof(commands) / sizeof(Command) - 1); // Сколько всего места в буфере осталось
+    if(empty < len) return 0;
+    while(len)
+    { // Запись в кольцевой буфер
+        int left = commands + sizeof(commands) / sizeof(Command) - d; // Сколько до конца отрезка
+        if(left > len) left = len;
+        memcpy(d, cmd, left * sizeof(Command));
+        cmd += left;
+        len -= left;
+        d += left;
+        if(d >= commands + sizeof(commands) / sizeof(Command)) d = commands;
+    }
+    d->axis = nextCmd;
+    d++;
+    if(d >= commands + sizeof(commands) / sizeof(Command)) d = commands;
+    cmdDst = d;
+    return 1;
+}
+
+
+void runCmd() 
+{               // Читаем команду
+    if(cmdPtr)  // из программы
+    {
+        if(cmdPtr->axis == nextCmd) cmdPtr++;
+        for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
+            cmdPtr->axis->moveTo(cmdPtr->pos);
+        if(!cmdPtr->axis) cmdPtr = 0;
+        return;
+    }
+    Command * s = cmdSrc, * d = cmdDst;
+    if(d != s) // или из очереди
+    {
+        do
+        {
+            Command * t = s++;
+            if(s >= commands + sizeof(commands) / sizeof(Command)) s = commands;
+            if(t->axis == nextCmd) 
+                break;
+            else
+                t->axis->moveTo(t->pos);
+        } while(d != s);
+        cmdSrc = s;
+    }
+}
+
 void ctlLoop()
 {
     int notReady = 0;
-    if(motorsEnabled) 
-    {
-        for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
+    if(motorsEnabled) for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
             notReady |= ctlMotor(m);
-        if(hold)
-            notReady |= ctlHold(motors + 5);
-        else
-            notReady |= ctlMotor(motors + 5);
-    }
+    if(hold)
+        notReady |= ctlHold(motors + 5);
+    else
+        if(motorsEnabled) notReady |= ctlMotor(motors + 5);
 
-    if(!notReady && cmdPtr && cmdPtr->axis)
+    if(!notReady) runCmd();/* && cmdPtr && cmdPtr->axis)
     { 
         if(cmdPtr->axis == nextCmd) cmdPtr++;
         for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
             cmdPtr->axis->moveTo(cmdPtr->pos);
         if(!cmdPtr->axis) cmdPtr = 0;
-    }
+    }*/
 }
