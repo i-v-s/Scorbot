@@ -69,6 +69,24 @@ const char * clear(const char * cmd)
     return 0;
 }
 
+const char * pop(const char * cmd)
+{
+    Command * dp = program;
+    while(dp->axis) dp++; // *dp = 0;
+    dp--; // *dp = ;
+    while(dp-- > program) if(dp->axis == nextCmd)
+    {
+        dp++;
+        dp->axis = 0;
+        dstPtr = dp;
+        break;
+    }
+    char buf[20];
+    sprintf(buf, "\nProgram size: %d ", dstPtr - program);
+    sendText(buf);
+    return 0;
+}
+
 const char * save(const char * cmd)
 {
     Command * dp = dstPtr;
@@ -183,6 +201,7 @@ const char * onSimple(const char * cmd)
     else if(!strcmp(cmd, "clear")) method = clear;
     else if(!strcmp(cmd, "stop")) method = stop;
     else if(!strcmp(cmd, "pos")) method = pos;
+    else if(!strcmp(cmd, "pop")) method = pop;
     else if(!strcmp(cmd, "get")) method = get;
     else if(!strcmp(cmd, "put")) method = put;
     else if(!strcmp(cmd, "zero")) method = setZero;
