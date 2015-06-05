@@ -179,7 +179,7 @@ char zeroE()
     while(1)
     {
         int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
-        if(abs(p - strt) >= 3000)
+        if(abs(p - strt) >= 6000)
         {
             motors[3].stop();
             motors[4].stop();
@@ -243,17 +243,17 @@ char zeroF()
 
 char zero(char noZero)
 {
-    //char buf[20];
     noZero &= 0x3F;
-    //int to, cp, total, on, stop, sum;
-    //char r;
 
     if(noZero & (1 << 5)) if(zeroF()) noZero &= ~(1 << 5);
     if(noZero & (1 << 1)) if(zeroB()) noZero &= ~(1 << 1);
     if(noZero & (1 << 2)) if(zeroC()) noZero &= ~(1 << 2);
     if(noZero & (1 << 0)) if(zeroA()) noZero &= ~(1 << 0);
-    if(noZero & (1 << 4)) if(zeroE()) noZero &= ~(1 << 4);
-    if(noZero & (1 << 3)) if(zeroD()) noZero &= ~(1 << 3);
+    for(int x = 3; x && noZero; x--)
+    {
+        if(noZero & (1 << 4)) if(zeroE()) noZero &= ~(1 << 4);
+        if(noZero & (1 << 3)) if(zeroD()) noZero &= ~(1 << 3);
+    }
     
     /*motors[3].forward();
     motors[4].forward();
