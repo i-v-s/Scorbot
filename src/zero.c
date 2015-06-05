@@ -179,13 +179,13 @@ char zeroE()
     while(1)
     {
         int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
-        if(p - strt >= 1440 * axisE->scale)
+        if(abs(p - strt) >= 3000)
         {
             motors[3].stop();
             motors[4].stop();
             while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
-            setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
-            setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
+            //setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
+            //setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
             sendText("E fail ");
             return 0;
         }
@@ -204,13 +204,13 @@ char zeroE()
     {
         int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
         traceRvs(p, 0x40);
-        if(strt - p >= 1440 * axisE->scale)
+        if(abs(strt - p) >= 3000)
         {
             motors[3].stop();
             motors[4].stop();
             while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
-            setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
-            setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
+            //setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
+            //setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
             sendText("E fail ");
             return 0;
         }

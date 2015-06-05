@@ -27,48 +27,6 @@
 
 uint8_t noZero = 0x3F;
 
-//enc_prg
-	uint8_t EncState[6]; //предыдущее состояние энкодера
-	uint16_t encData[6] = {1, 1, 1, 1, 1, 1};	//счетный регистр энкодера
-	
-    uint8_t rab[6] = {0};
-    uint16_t e[6] = {0};
-	
-	uint8_t mail = 0;
-	uint8_t fll = 1; // и это..
-
-	uint16_t cnt_base = 0;
-	
-//	uint8_t EData;
-	uint8_t flag = 0;
-	uint8_t error = 0;//флаг ошибки
-//	uint8_t flg1 = 0;//еще один флаг
-	
-	uint8_t data1_one = 0;
-	uint8_t data2_one = 0;
-	uint8_t data3_one = 0;
-	uint8_t data4_one = 0;
-	uint8_t data5_one = 0;
-	uint8_t data6_one = 0;
-	
-	uint8_t temp8;
-	
-	uint8_t m1 = 0;
-	uint8_t m2 = 0;
-	uint8_t m3 = 0;
-	uint8_t m4 = 0;
-	uint8_t m5 = 0;
-	uint8_t m6 = 0;
-
-//uint8_t flag_deb=0;
-//uint8_t flag_deb1=0;
-int cnt_deb=128;
-int cnt_deb1=0;
-
-//long Chislo;
-//long Chisl;
-//long Chis;
-
 	uint16_t che;
 	uint8_t div;
 

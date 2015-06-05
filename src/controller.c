@@ -12,8 +12,8 @@ Motor motors[6] = {0};
 float Apos() { return (getMotorPos(motors + 0) - axisA->zero) / axisA->scale;}
 float Bpos() { return (-getMotorPos(motors + 1) - axisB->zero) / axisB->scale;}
 float Cpos() { return (getMotorPos(motors + 2) - axisC->zero) / axisC->scale;}
-float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4) - (axisD->zero << 1)) / (2.0 * axisD->scale);}
-float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4) - (axisE->zero << 1)) / (2.0 * axisD->scale);}
+float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4) - axisD->zero) / axisD->scale;}
+float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4) - axisE->zero) / axisD->scale;}
 float Fpos() { return (getMotorPos(motors + 5) - axisF->zero) / axisF->scale;}
 
 void Amove(float pos) { motors[0].ref = (int)(pos * axisA->scale) + axisA->zero;}
@@ -24,16 +24,16 @@ void Dmove(float pos)
 { 
     int p = (int) (pos * axisD->scale) + axisD->zero;
     int d = motors[3].ref - motors[4].ref;
-    motors[3].ref = p + d;
-    motors[4].ref = p - d;
+    motors[3].ref = (p + d) >> 1;
+    motors[4].ref = (p - d) >> 1;
 }
 
 void Emove(float pos)
 { 
-    int p = (int) (pos * axisE->scale) + axisE->zero;
+    int p = (int) (pos * axisD->scale) + axisE->zero;
     int s = motors[3].ref + motors[4].ref;
-    motors[3].ref = s + p;
-    motors[4].ref = s - p;
+    motors[3].ref = (s + p) >> 1;
+    motors[4].ref = (s - p) >> 1;
 }
 
 void Fmove(float pos) { motors[5].ref = (int)(pos * axisF->scale) + axisF->zero;}
@@ -54,12 +54,12 @@ float Hpos() { return (float)hold / 255.0;}
 
 Axis axes[7] = 
 { //               ш/ед     ноль
-    {Apos, Amove, 42.88900,  -58},
-    {Bpos, Bmove, 33.02200, 1400},
-    {Cpos, Cmove, 33.93700,  149},
-    {Dpos, Dmove, -8.33333,   40},
-    {Epos, Emove,  4.16666,    0},
-    {Fpos, Fmove,  8.00000,    0},
+    {Apos, Amove,  42.88900,  -58},
+    {Bpos, Bmove,  33.02200, 1400},
+    {Cpos, Cmove,  33.93700,  149},
+    {Dpos, Dmove, -16.66666,  160},
+    {Epos, Emove,  16.66666,   90},
+    {Fpos, Fmove,   8.00000,    0},
     {Hpos, Hmove}
 };
 
