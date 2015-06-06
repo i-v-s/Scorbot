@@ -52,7 +52,7 @@ char zeroA()
         {
             if(r)
             {
-                sendText("A no move ");
+                sendText("A! fail ");
                 motors[0].stop();
                 return 0;
             } 
@@ -84,7 +84,7 @@ char zeroB()
         if(!(sw & 4)) brk = zt;
         if(ticks > to && motors[1].rate < 10)
         {
-            sendText("B no move ");
+            sendText("B! fail ");
             motors[1].stop();
             motors[2].stop();
             return 0;
@@ -118,8 +118,17 @@ char zeroC()
 {
     sendText("C>> ");
     motors[2].forward();
+    int to = ticks + 30;
     for(int brk = zt; brk; brk--)
+    {
         if(!(switches & 2)) brk = zt;
+        if(ticks > to && motors[2].rate < 10)
+        {
+            sendText("C! fail ");
+            motors[2].stop();
+            return 0;
+        }
+    }
     sendText("C<< ");
     motors[2].reverse();
     for(int brk = zt; brk; brk--)
@@ -176,6 +185,7 @@ char zeroE()
     motors[3].forward();
     initFwd();
     int strt = getMotorPos(motors + 3) - getMotorPos(motors + 4);
+    int to = ticks + 20;
     while(1)
     {
         int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
@@ -189,7 +199,9 @@ char zeroE()
             sendText("E fail ");
             return 0;
         }
-        traceFwd(p, 30, 0x40);
+        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { sendText("E! fail "); return 0;}
+
+        traceFwd(p, 10, 0x40);
     }
     motors[3].stop();
     motors[4].stop();
