@@ -59,7 +59,6 @@ int main(void)
     USB_Init();
     mx_pinout_config();
     sendText("Scorbot firmware 0.1 ");
-   
     while(1)
     {
 		if(noZero)

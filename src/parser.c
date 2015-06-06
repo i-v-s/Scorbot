@@ -20,6 +20,10 @@ Command params[10], * pc = params;
 
 Command * dstPtr = program;
 
+#pragma location=0x08002000 
+__no_init volatile unsigned short flashBuf[1024];
+#define flashBufPage 0x08002000
+
 const char * commit()
 {
     char buf[20];
@@ -48,7 +52,7 @@ float lastSaved[7];
 
 const char * list(const char * cmd)
 {
-    sendText("List:");
+    sendText("\nList:");
     for(Command * p = program; p->axis; p++)
         if(p->axis != nextCmd)
         {
@@ -124,28 +128,44 @@ const char * save(const char * cmd)
     return 0;
 }
 
+const char * load(const char * cmd)
+{
+    Command * p = program;
+    for(Command * c = (Command *)flashBuf; c->axis; c++)
+        *(p++) = *c;
+    p->axis = 0;
+    dstPtr = p;
+    char buf[20];
+    sprintf(buf, "\nProgram size: %d ", p - program);
+    sendText(buf);
+    return 0;
+}
+
 const char * flash(const char * cmd)
 {
-    FLASH->KEYR = 0x45670123;
-    FLASH->KEYR = 0xCDEF89AB;    
-/*void Internal_Flash_Erase(unsigned int pageAddress) {
+    if(FLASH->CR & FLASH_CR_LOCK)
+    {
+        FLASH->KEYR = 0x45670123;
+        FLASH->KEYR = 0xCDEF89AB;
+    }
+    
+//void Internal_Flash_Erase(unsigned int pageAddress) {
     while (FLASH->SR & FLASH_SR_BSY);
     if (FLASH->SR & FLASH_SR_EOP) {
         FLASH->SR = FLASH_SR_EOP;
     }
 
     FLASH->CR |= FLASH_CR_PER;
-    FLASH->AR = pageAddress;
+    FLASH->AR = flashBufPage;
     FLASH->CR |= FLASH_CR_STRT;
     while (!(FLASH->SR & FLASH_SR_EOP));
     FLASH->SR = FLASH_SR_EOP;
     FLASH->CR &= ~FLASH_CR_PER;
-} */   
+//} */   
 //data - указатель на записываемые данные
 //address - адрес во flash
 //count - количество записываемых байт, должно быть кратно 2
-/*void Internal_Flash_Write(unsigned char* data, unsigned int address, unsigned int count) {
-    unsigned int i;
+//void Internal_Flash_Write(unsigned char* data, unsigned int address, unsigned int count) {
 
     while (FLASH->SR & FLASH_SR_BSY);
     if (FLASH->SR & FLASH_SR_EOP) {
@@ -154,14 +174,17 @@ const char * flash(const char * cmd)
 
     FLASH->CR |= FLASH_CR_PG;
 
-    for (i = 0; i < count; i += 2) {
-        *(volatile unsigned short*)(address + i) = (((unsigned short)data[i + 1]) << 8) + data[i];
+    Command * p = program;
+    for(; p->axis; p++);
+    p++;
+    volatile unsigned short * fb = flashBuf;
+    for(unsigned short * pp = (unsigned short *)program; pp < (unsigned short *)p; pp++)
+    {
+        *(fb++) = *pp;
         while (!(FLASH->SR & FLASH_SR_EOP));
         FLASH->SR = FLASH_SR_EOP;
     }
-
     FLASH->CR &= ~(FLASH_CR_PG);
-} */   
     return 0;
 }
 
@@ -239,6 +262,8 @@ const char * onSimple(const char * cmd)
     else if(!strcmp(cmd, "off")) method = off;
     else if(!strcmp(cmd, "on")) method = on;
     else if(!strcmp(cmd, "save")) method = save;
+    else if(!strcmp(cmd, "flash")) method = flash;
+    else if(!strcmp(cmd, "load")) method = load;
     else if(!strcmp(cmd, "clear")) method = clear;
     else if(!strcmp(cmd, "stop")) method = stop;
     else if(!strcmp(cmd, "pos")) method = pos;
