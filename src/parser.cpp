@@ -1,178 +1,130 @@
-#include <string.h>
-#include <stdlib.h>
-#include <stdio.h>
-#include "host_io.h"
-#include <stdint.h>
-#include "controller.h"
-// PTP A4 B5 
+// Новый парсер
+// Виды выражений:
+// Оси: A B C D E F H X Y Z, итого до 16 штук
+// Число: 123.56
+// Вектор: 213A 14.7B
+// Вектор: 12x 59y 14z
+// Вектора могут содержать любое количество осей
+// Идентификатор abcd345
+// Команды: ptp stop lin и т.п.
+// Команды имеют низший приоритет
+// Операции: A + B * C и т.п.
+// Скобки: (2 + 3)
 
-char text[12], * tp = text;
-char num[16], * np = num;
+/* 
+Примеры:
+        
+    ptp 213a 15b;
+     ^      ^
+   команда вектор
 
-extern uint16_t encData[6];
-extern uint8_t rab[6];
-extern uint16_t e[6];
-extern uint8_t nozero;
+Виртуальная машина со стеком
+    Примеры:
+    выражение           код
+    2x 3y           [2.0] [3.0] [(1 << X)|(1 << Y)] результат в стеке: [(1 << X)|(1 << Y)] [2.0] [3.0]
+    28              [28.0] [0]                      результат в стеке: [0] [28.0]
+    a + b           [LOAD|a] [LOAD|b] [+]
+    c = 2 * b       [0] [2.0] [LOAD|b] [+] [WRITE|c]
+    5x 7y / 2       [(1<<X)(1<<Y)] [5] [7] [0] [2.0] [/]
+    if(a) {b; c;}   [a] [IF | offset] [b] [c]
 
-int command = 0;
-struct Param
-{
-    char axis;
-    float pos;
-} params[10], * pc = params;
+Формат команды/операнда
+    16 бит - маска осей или индекс переменной
+    8 бит  - индекс команды/операции или размер сопутствующих данных
+    1 бит  - команда к выполнению, иначе данные в стек
 
-
-const char * commit()
-{
-    char buf[20];
-    sprintf(buf, "commit(%d)", command);
-    sendText(buf);
-    switch(command)
+Работа ВМ:
+    
+    for(int * pc = program; *pc;)
     {
-    case 0: return 0;
-    case 1:
-        while(pc > params)
+        int c = *(pc++);
+        if(c < 0)
         {
-            pc--;
-            char a = pc->axis;
-            if(a >= 'a' && a <= 'f')
-            {
-                a -= 'a';
-                rab[a] = 1;
-                e[a] = (int)pc->pos;
-            }
+            int size = (c >> 16) & 0xF;
+            sp++;
+            memcpy(sp, pc, size);
+            sp += size;
+            pc += size;
+            *sp = c;
         }
-    }
-    command = 0;
-    sendText(")");
-    return 0;
-}
-
-const char * save(const char * cmd)
-{
-    return 0;
-}
-
-const char * reset(const char * cmd)
-{
-    return 0;
-}
-
-const char * pos(const char * cmd)
-{
-    sendText("Position:");
-    for(char x = 0; x < 6; x++)
-    {
-        char buf[12];
-        sprintf(buf, " %c%d", x + 'A', encData[x]);
-        sendText(buf);
-    }
-    return 0;
-}
-
-const char * ptp(const char * cmd)
-{
-    sendText("PTP(");
-    command = 1;
-    return 0;
-}
-
-const char * setZero(const char * cmd)
-{
-    sendText("ZERO: ");
-    nozero = 1;
-    return 0;
-}
-
-const char * onSimple(const char * cmd)
-{
-    char const *(* method)(const char * cmd) = 0;
-    if(!strcmp(cmd, "ptp")) method = ptp;
-    else if(!strcmp(cmd, "reset")) method = reset;
-    else if(!strcmp(cmd, "pos")) method = pos;
-    else if(!strcmp(cmd, "zero")) method = setZero;
-    if(method)
-    {
-        if(command) commit();
-        tp = text;
-        return method(cmd);
-    }
-    return 0;
-}
-
-const char * onComplex(const char * name, const char * data)
-{
-    char c = name[0];
-    if(c && !name[1])
-    {
-        float f = atof(data);
-        if(c >= 'a' && c <= 'f') 
+        else
         {
-            char bf[20];
-            sprintf(bf, "%c%f ", c + 'A' - 'a', f);
-            
-            pc->axis = c;
-            pc->pos = f;
-            pc++;
-            sendText(bf);
-            return 0;
+            cmds[(c >> 16) & 0xFF](c & 0xFFFF);
         }
-        if(c >= 'x' && c <= 'z') return 0;
-    }
-    if(!strcmp(name, "save"))
+    switch(*(sp--))
     {
-        if(command) commit();
-        int d = atoi(data);
-        char bf[20];
-        sprintf(bf, "save %d", d);
-        sendText(bf);
-        return 0;
+    case '+': sp[-1] += *sp; sp--;
     }
-    return "Unknown name";
-}
 
-//char 
-
-const char * parse(const unsigned char * data, const unsigned char * end)
-{    
-    while(data < end)
+Пример деления:
+    '5x 7y / 2' => [5] [7] [(1<<X)(1<<Y)] [2.0] [0] [/]
+                                                 ^
+                                                 SP
+    int * div(int * sp)
     {
-        unsigned char c = *(data++);
+        if(*(sp--) != 0) {send('Можно делить только на скаляр'); return 0;}
+        float d = 1.0 / *(float *)(sp--);
+        int mask = *sp;
+        for(float * p = (float *)sp - 1; mask; mask >>= 1)
+            if(mask & 1) *(p--) *= d;
+        return sp;
+    }
+
+*/
+
+typedef struct
+{
+    void (* exec) ();
+    int sign;
+    char priority;
+} Operator;
+
+typedef struct
+{
+    void (* exec) ();
+    const char * name;
+} Statement;
+
+Operator ops[] = 
+{
+    {   add, '+', 5},
+    {commit, ';', 0},
+    {0}
+};
+
+Statement statements[] =
+{
+    {   if_st, "if"},
+    {0}
+};
+
+char name[32], * nm = name;
+
+int stack[128], * sp = stack;
+int prog[128], * ip = prog;
+#define labelMode 0
+#define numberMode 1
+
+char mode = 0;
+
+char * compile(const char * code, const char * end)
+{
+    while(code < end)
+    {
+        unsigned char c = *(code++);
         if(c >= 'A' && c <= 'Z') c -= 'A' - 'a'; 
         if(c >= 'a' && c <= 'z')
         {
-            if(tp >= text + sizeof(text) - 1) { tp = text; return "Too long name";}
-            *(tp++) = c;
-            continue;
-        }
-        if(tp != text)
-        {
-            *tp = 0;
-            const char * e = onSimple(text);
-            if(e) return e;
+            *(nm++) = c;
         }
         
-        if((c >= '0' && c <= '9') || c == '-' || c == '.')
+        if(c >= 'a'
+        else if(nm != name)
         {
-            if(tp == text) return "Name required";
-            if(np >= num + sizeof(num) - 1) {np = num; return "Too long number";}
-            *(np++) = c;
-            continue;
+            
+            
         }
-        if(tp != text && np != num)
-        {
-            tp = text;
-            *np = 0;
-            np = num;
-            const char * e = onComplex(text, num);
-            if(e) return e;
-        }
-
-        if(c == ';') 
-        {
-            if(tp != text && np == num) {tp = text; return "Argument required";}
-            if(command) commit();
-        }
+        
     }
     return 0;
 }

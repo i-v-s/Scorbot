@@ -7670,7 +7670,7 @@
       <name>$PROJ_DIR$\..\inc\mx_gpio.h</name>
     </file>
     <file>
-      <name>$PROJ_DIR$\..\src\parser.c</name>
+      <name>$PROJ_DIR$\..\src\parser.cpp</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\parser.h</name>

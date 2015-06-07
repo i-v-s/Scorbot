@@ -5,7 +5,6 @@
 #include "host_io.h"
 #include <stdint.h>
 #include "controller.h"
-// PTP A4 B5 
 
 char text[12], * tp = text;
 char num[16], * np = num;
