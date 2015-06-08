@@ -72,6 +72,8 @@
 
 */
 
+#include "host_io.h"
+
 typedef struct
 {
     void (* exec) ();
@@ -85,7 +87,7 @@ typedef struct
     const char * name;
 } Statement;
 
-Operator ops[] = 
+/*Operator ops[] = 
 {
     {   add, '+', 5},
     {commit, ';', 0},
@@ -96,35 +98,123 @@ Statement statements[] =
 {
     {   if_st, "if"},
     {0}
-};
+};*/
 
-char name[32], * nm = name;
 
 int stack[128], * sp = stack;
 int prog[128], * ip = prog;
-#define labelMode 0
-#define numberMode 1
+#define spaceMode 0
+#define nameMode 1
+#define digitMode 2
+#define signMode 3
 
-char mode = 0;
+struct Parser
+{
+    void pushName(const char * name);
+    void pushNumber(const char * text, char post);
+    void pushSign(const char * sign);
+} parser;
 
-char * compile(const char * code, const char * end)
+void Parser::pushName(const char * name)
+{
+    
+    
+}
+
+void Parser::pushNumber(const char * text, char post)
+{
+    
+}
+
+void Parser::pushSign(const char * sign)
+{
+    
+    
+}
+
+
+struct Lexer
+{
+    char mode;
+    char buf[32], * bufp;
+    char post;
+    void compile(const char * code, const char * end);
+    inline void onSign(char s);
+    void init(Parser * parser);
+    Parser * parser;
+} lexer;
+
+inline void Lexer::onSign(char s)
+{
+    if(s == ';' || s == ',' || s == ')' || s == '}')
+    {
+        if(bufp > buf) {*bufp = 0; parser->pushSign(buf); bufp = buf;}
+        int t = (unsigned char) s;
+        parser->pushSign((const char *)&t);
+    }
+    else
+        *(bufp++) = s;
+}
+
+void Lexer::init(Parser * parser)
+{
+    bufp = buf;
+    post = 0;
+    mode = spaceMode;
+    this->parser = parser;
+}
+
+void Lexer::compile(const char * code, const char * end)
 {
     while(code < end)
     {
         unsigned char c = *(code++);
-        if(c >= 'A' && c <= 'Z') c -= 'A' - 'a'; 
-        if(c >= 'a' && c <= 'z')
+        if(c >= 'A' && c <= 'Z') c -= 'A' - 'a';
+        switch(mode)
         {
-            *(nm++) = c;
+        case spaceMode:
+            if(c >= 'a' && c <= 'z') {mode = nameMode; break;}
+            if(c >= '0' && c <= '9') {mode = digitMode; break;}
+            if(c <= ' ') continue;
+            mode = signMode; onSign(c); continue;
+        case nameMode:
+            if((c >= 'a' && c <= 'z') || (c >= '0' && c <= '9')) break;
+            *bufp = 0; parser->pushName(buf); bufp = buf;
+            if(c <= ' ') mode = spaceMode;
+            else {mode = signMode; onSign(c);}
+            continue;
+        case digitMode:
+            if((c >= '0' && c <= '9') || c == '.') break;
+            if(c >= 'a' && c <= 'z')
+            {
+                if(!post) post = c;
+                else sendText("\nToo long axis name");
+                continue;
+            }
+            *bufp = 0;
+            parser->pushNumber(buf, post);
+            bufp = buf;
+            post = 0;
+            if(c <= ' ') mode = spaceMode;
+            else {mode = signMode; onSign(c);}
+            continue;
+        case signMode:
+            if(c >= 'a' && c <= 'z') mode = nameMode;
+            else if(c >= '0' && c < '9') mode = digitMode;
+            else if(c <= ' ') mode = spaceMode;
+            else { onSign(c); continue;}
+            if(mode != signMode && bufp > buf) { *bufp = 0; parser->pushSign(buf); bufp = buf;}
+            if(mode == spaceMode) continue;
+            break;
         }
-        
-        if(c >= 'a'
-        else if(nm != name)
-        {
-            
-            
-        }
-        
+        *(bufp++) = c;
     }
+}
+extern "C" {
+const char * parse(const char * data, const char * end)
+{
+    lexer.init(&parser);
+    lexer.compile(data, end);
     return 0;
+}
 }
