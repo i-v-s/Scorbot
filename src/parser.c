@@ -299,6 +299,11 @@ const char * onComplex(const char * name, const char * data)
             return 0;
         }
     }
+    if(!strcmp(name, "count"))
+    {
+        doCount = atoi(data);
+        return 0;
+    }
     return "Unknown name";
 }
 

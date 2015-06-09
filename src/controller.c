@@ -131,6 +131,7 @@ void motorsOn(void)
 
 Command program[64] = {0};
 Command * cmdPtr = 0;
+int doCount = 0;
 
 #define timeOut 100
 
@@ -217,7 +218,11 @@ void runCmd()
         if(cmdPtr->axis == nextCmd) cmdPtr++;
         for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
             cmdPtr->axis->moveTo(cmdPtr->pos);
-        if(!cmdPtr->axis) cmdPtr = 0;
+        if(!cmdPtr->axis)
+        {
+            if(doCount) {cmdPtr = program; doCount--;}
+            else cmdPtr = 0;
+        }
         return;
     }
     Command * s = cmdSrc, * d = cmdDst;
