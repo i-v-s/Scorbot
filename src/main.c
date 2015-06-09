@@ -52,6 +52,10 @@ void Enc_prg(void);//аппаратный энкодер #6
 
 int main(void)
 {
+    char * t = "ptp 12a (12 + 2)b 10.5c * 2;";
+    parse(t, t + strlen(t));
+    while(1);
+
     char enOut = 0;
     Set_System();
     Set_USBClock();

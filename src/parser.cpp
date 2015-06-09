@@ -72,14 +72,18 @@
 
 */
 
+#include <stdlib.h>
+#include <stdio.h>
 #include "host_io.h"
-
-typedef struct
+#include "controller.h"
+    
+struct Operator
 {
-    void (* exec) ();
     int sign;
     char priority;
-} Operator;
+    
+    void (* exec) ();
+};
 
 typedef struct
 {
@@ -87,33 +91,43 @@ typedef struct
     const char * name;
 } Statement;
 
-/*Operator ops[] = 
+Operator ops[] = 
 {
-    {   add, '+', 5},
-    {commit, ';', 0},
+    {'+', 5},
+    {';', 0},
     {0}
 };
 
-Statement statements[] =
+/*Statement statements[] =
 {
     {   if_st, "if"},
     {0}
 };*/
 
-
-int stack[128], * sp = stack;
-int prog[128], * ip = prog;
-#define spaceMode 0
-#define nameMode 1
-#define digitMode 2
-#define signMode 3
+int axisIdx(char a)
+{
+    for(const char * p = axisNames; *p; p++)
+    {
+        if(*p == a) return p - axisNames;
+    }
+    return -1;
+}
 
 struct Parser
 {
+    int stack[128], * sp;
+    int prog[128], * ip;
     void pushName(const char * name);
     void pushNumber(const char * text, char post);
     void pushSign(const char * sign);
+    void pushOp(Operator * o);
+    Parser(void);
 } parser;
+
+Parser::Parser(void): ip(prog)
+{
+    sp = stack - 1;
+}
 
 void Parser::pushName(const char * name)
 {
@@ -121,15 +135,61 @@ void Parser::pushName(const char * name)
     
 }
 
-void Parser::pushNumber(const char * text, char post)
+void Parser::pushOp(Operator * o)
 {
     
+    
+    
+}
+
+
+void Parser::pushNumber(const char * text, char post)
+{
+    int mask = 0;
+    if(post)
+    {
+        int axis = axisIdx(post);
+        if(axis >= 0) mask = 1 << axis;
+        else
+        {
+            char buf[20];
+            sprintf(buf, "\nUnknown axis %c ", post);
+            sendText(buf);
+        }
+    }
+    float num = atof(text);
+    if(sp >= stack && *sp >= 0) // ¬ стеке сверху значение - надо присоединить
+    {
+        
+        
+    }
+    else // иначе просто пишем
+    {
+        *(float *)(++sp) = num;
+        *(++sp) = mask | 0x10000;
+    }
 }
 
 void Parser::pushSign(const char * sign)
 {
-    
-    
+    while(char c = *sign)
+    {
+        int cc = *(short *)sign;
+        Operator * o = ops;
+        for(; o->sign; o++)
+        {
+            if(o->sign == c) break;
+            if(o->sign == cc) { sign++; break;}
+        }
+        if(o->sign) pushOp(o);
+        else         
+        {
+            char buf[20];
+            sprintf(buf, "\nUnknown symbol %c ", c);
+            sendText(buf);
+        }
+        sign++;
+    }
 }
 
 
@@ -146,7 +206,7 @@ struct Lexer
 
 inline void Lexer::onSign(char s)
 {
-    if(s == ';' || s == ',' || s == ')' || s == '}')
+    if(s == ';' || s == ',' || s == ')' || s == '}') // Ќекоторые операции должны выполн€тьс€ сразу
     {
         if(bufp > buf) {*bufp = 0; parser->pushSign(buf); bufp = buf;}
         int t = (unsigned char) s;
@@ -156,6 +216,12 @@ inline void Lexer::onSign(char s)
         *(bufp++) = s;
 }
 
+
+#define spaceMode 0
+#define nameMode 1
+#define digitMode 2
+#define signMode 3
+
 void Lexer::init(Parser * parser)
 {
     bufp = buf;
@@ -163,6 +229,7 @@ void Lexer::init(Parser * parser)
     mode = spaceMode;
     this->parser = parser;
 }
+
 
 void Lexer::compile(const char * code, const char * end)
 {
