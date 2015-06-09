@@ -53,3 +53,9 @@ Temporary Items
 .apdisk
 *.dep
 *.browse
+*.browse
+*.sim
+*.wspos
+*.wsdt
+*.dni
+*.dep
