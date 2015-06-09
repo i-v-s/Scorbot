@@ -58,7 +58,7 @@ Axis axes[7] =
     {Bpos, Bmove,  33.02200, 1400},
     {Cpos, Cmove,  33.93700,  149},
     {Dpos, Dmove, -16.66666,  160},
-    {Epos, Emove, -16.66666,  170},
+    {Epos, Emove, -16.66666,  350},
     {Fpos, Fmove,   8.00000,    0},
     {Hpos, Hmove}
 };

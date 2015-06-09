@@ -261,7 +261,7 @@ char zero(char noZero)
     if(noZero & (1 << 1)) if(zeroB()) noZero &= ~(1 << 1);
     if(noZero & (1 << 2)) if(zeroC()) noZero &= ~(1 << 2);
     if(noZero & (1 << 0)) if(zeroA()) noZero &= ~(1 << 0);
-    for(int x = 3; x && noZero; x--)
+    for(int x = 2; x && noZero; x--)
     {
         if(noZero & (1 << 4)) if(zeroE()) noZero &= ~(1 << 4);
         if(noZero & (1 << 3)) if(zeroD()) noZero &= ~(1 << 3);
