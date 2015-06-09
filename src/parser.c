@@ -208,7 +208,7 @@ const char * on(const char * cmd)
 
 const char * get(const char * cmd)
 {
-    Command c[2] = {{axisH, 1.0}, {0}};
+    Command c[2] = {{axisH, 100.0}, {0}};
     pushCommand(c);
     return 0;
 }

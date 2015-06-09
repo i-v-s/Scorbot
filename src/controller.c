@@ -42,7 +42,8 @@ unsigned char hold = 0;
 void Hmove(float pos) 
 {
     Motor * m = motors + 5;
-    hold = (char)(pos * 255);
+    if(pos > 100.0) pos = 100.0;
+    hold = (char)(pos * 2.55);
     if(hold)
     {
         m->forward();
@@ -50,7 +51,7 @@ void Hmove(float pos)
     }
 }
 
-float Hpos() { return (float)hold / 255.0;}
+float Hpos() { return (float)hold / 2.55;}
 
 Axis axes[7] = 
 { //               ш/ед     ноль
