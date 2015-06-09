@@ -77,12 +77,22 @@
 #include "host_io.h"
 #include "controller.h"
     
+#define BIN  3
+#define PREF 1
+#define POST 2
+#define LSEQ 4
+
 struct Operator
 {
-    int sign;
-    char priority;
-    
+    char sign[4];
+    char type, iPriority, oPriority;
     void (* exec) ();
+};
+
+struct Var
+{
+    char name[8];
+    float value;
 };
 
 typedef struct
@@ -91,12 +101,35 @@ typedef struct
     const char * name;
 } Statement;
 
-Operator ops[] = 
+Operator pbOps[] = 
 {
-    {'+', 5},
-    {';', 0},
+    {"+=", BIN | LSEQ,  2,  2},
+    {"+",  BIN,         4,  4},
+    {"*",  BIN,         5,  5},
+    {"==", BIN,         3,  3},
+    {"=",  BIN | LSEQ, 11,  2},
+    {"(",  BIN,        11,  1}, // Запуск функции
+    {")",  POST,        1, 11},
+    {";",  POST,        0,  0},
     {0}
 };
+
+Operator preOps[] = 
+{
+    {"-", PREF, 10, 10},
+    {"+", PREF, 10, 10},
+    {"(", PREF, 11, 1},
+    {0}
+};
+
+Operator * operators[] = {pbOps, preOps};
+
+int opIdx(Operator * o)
+{
+    if(o >= pbOps && o < pbOps + sizeof(pbOps) / sizeof(Operator))    return (o - pbOps)  | 0x000;
+    if(o >= preOps && o < preOps + sizeof(preOps) / sizeof(Operator)) return (o - preOps) | 0x100;
+    return -1;
+}
 
 /*Statement statements[] =
 {
@@ -115,8 +148,10 @@ int axisIdx(char a)
 
 struct Parser
 {
-    int stack[128], * sp;
+    Operator * stack[128], * * sp;
     int prog[128], * ip;
+    char state;
+    //Var vars[32];
     void pushName(const char * name);
     void pushNumber(const char * text, char post);
     void pushSign(const char * sign);
@@ -124,24 +159,33 @@ struct Parser
     Parser(void);
 } parser;
 
-Parser::Parser(void): ip(prog)
+Parser::Parser(void): ip(prog), state(PREF)
 {
     sp = stack - 1;
 }
 
 void Parser::pushName(const char * name)
 {
-    
-    
+    sendText(name);
+    sendText(" ");
+    state = POST;    
 }
 
 void Parser::pushOp(Operator * o)
 {
-    
-    
-    
+    char op = o->iPriority;
+    if(o->type & LSEQ) op++;
+    while(sp >= stack && op <= (*sp)->oPriority) 
+    {
+        Operator * t = *(sp--);
+        sendText((char *)&t->sign);
+        sendText(" ");
+        *(ip++) = (0x8000 | opIdx(t)) << 16;
+        if(o->sign[0] == ')' && t->sign[0] == '(')
+            return;
+    }
+    *(++sp) = o;
 }
-
 
 void Parser::pushNumber(const char * text, char post)
 {
@@ -158,16 +202,21 @@ void Parser::pushNumber(const char * text, char post)
         }
     }
     float num = atof(text);
-    if(sp >= stack && *sp >= 0) // В стеке сверху значение - надо присоединить
+    /*if(sp >= stack && *sp >= 0) // В стеке сверху значение - надо присоединить
     {
         
         
     }
-    else // иначе просто пишем
+    else*/ // иначе просто пишем
     {
-        *(float *)(++sp) = num;
-        *(++sp) = mask | 0x10000;
+        *(ip++) = mask | 0x10000;
+        *(float *)(ip++) = num;
+        sendText(text);
+        sendText(" ");
+        //*(float *)(++sp) = num;
+        //*(++sp) = mask | 0x10000;
     }
+    state = POST;
 }
 
 void Parser::pushSign(const char * sign)
@@ -175,17 +224,22 @@ void Parser::pushSign(const char * sign)
     while(char c = *sign)
     {
         int cc = *(short *)sign;
-        Operator * o = ops;
-        for(; o->sign; o++)
+        Operator * o = (state == PREF) ? preOps : pbOps;
+        for(; o->sign[0]; o++)
         {
-            if(o->sign == c) break;
-            if(o->sign == cc) { sign++; break;}
+            int s = *(int *)o->sign;
+            if(s == c) break;
+            if(s == cc) { sign++; break;}
         }
-        if(o->sign) pushOp(o);
+        if(o->sign[0])
+        {
+            pushOp(o);
+            if(o->type & BIN == BIN) state = PREF;
+        }
         else         
         {
             char buf[20];
-            sprintf(buf, "\nUnknown symbol %c ", c);
+            sprintf(buf, "\nUnknown symbol '%c' ", c);
             sendText(buf);
         }
         sign++;

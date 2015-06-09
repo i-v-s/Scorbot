@@ -52,7 +52,7 @@ void Enc_prg(void);//аппаратный энкодер #6
 
 int main(void)
 {
-    char * t = "ptp 12a (12 + 2)b 10.5c * 2;";
+    char * t = "B=-abs(2 + 3) * -4;";//"ptp 12a (12 + 2)b 10.5c * 2;";
     parse(t, t + strlen(t));
     while(1);
 
