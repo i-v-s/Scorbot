@@ -201,7 +201,7 @@ char zeroE()
         }
         if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { sendText("E! fail "); return 0;}
 
-        traceFwd(p, 10, 0x40);
+        traceFwd(p, 30, 0x40);
     }
     motors[3].stop();
     motors[4].stop();

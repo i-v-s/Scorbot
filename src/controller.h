@@ -17,6 +17,7 @@ typedef struct
 typedef struct
 {
     float (* getPos)();
+    float (* getRef)();
     void (* moveTo)(float pos);
     float scale;
     int zero;

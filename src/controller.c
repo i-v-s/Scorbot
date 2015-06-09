@@ -16,6 +16,14 @@ float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4) - axisD
 float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4) - axisE->zero) / axisD->scale;}
 float Fpos() { return (getMotorPos(motors + 5) - axisF->zero) / axisF->scale;}
 
+float Aref() { return (motors[0].ref - axisA->zero) / axisA->scale;}
+float Bref() { return (-motors[1].ref - axisB->zero) / axisB->scale;}
+float Cref() { return (motors[2].ref - axisC->zero) / axisC->scale;}
+float Dref() { return (motors[3].ref + motors[4].ref - axisD->zero) / axisD->scale;}
+float Eref() { return (motors[3].ref - motors[4].ref - axisE->zero) / axisD->scale;}
+float Fref() { return (motors[5].ref - axisF->zero) / axisF->scale;}
+
+
 void Amove(float pos) { motors[0].ref = (int)(pos * axisA->scale) + axisA->zero;}
 void Bmove(float pos) { motors[1].ref = -(int)(pos * axisB->scale) - axisB->zero;}
 void Cmove(float pos) { motors[2].ref = (int)(pos * axisC->scale) + axisC->zero;}
@@ -55,13 +63,13 @@ float Hpos() { return (float)hold / 2.55;}
 
 Axis axes[7] = 
 { //               ш/ед     ноль
-    {Apos, Amove,  42.88900,  -58},
-    {Bpos, Bmove,  33.02200, 1400},
-    {Cpos, Cmove,  33.93700,  149},
-    {Dpos, Dmove, -16.66666,  160},
-    {Epos, Emove, -16.66666,  350},
-    {Fpos, Fmove,   8.00000,    0},
-    {Hpos, Hmove}
+    {Apos, Aref, Amove,  42.88900,  -58},
+    {Bpos, Bref, Bmove,  33.02200, 1400},
+    {Cpos, Cref, Cmove,  33.93700,  149},
+    {Dpos, Dref, Dmove, -16.66666,  160},
+    {Epos, Eref, Emove, -16.66666,  350},
+    {Fpos, Fref, Fmove,   8.00000,    0},
+    {Hpos, Hpos, Hmove}
 };
 
 const char axisNames[] = "abcdefh";

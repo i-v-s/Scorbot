@@ -48,8 +48,6 @@ const char * go(const char * cmd)
     return 0;
 }
 
-float lastSaved[7];
-
 const char * list(const char * cmd)
 {
     sendText("\nList:");
@@ -57,7 +55,7 @@ const char * list(const char * cmd)
         if(p->axis != nextCmd)
         {
             char buf[20];
-            sprintf(buf, " %c%.2f", axisNames[p->axis - axes] + ('A' - 'a'), p->pos);
+            sprintf(buf, " %c%.1f", axisNames[p->axis - axes] + ('A' - 'a'), p->pos);
             sendText(buf);
         }
         else
@@ -97,10 +95,11 @@ const char * save(const char * cmd)
     if(dstPtr == program)
         for(int x = 0; x < sizeof(axes) / sizeof(Axis); x++) // Пишем всё
         {
-            dstPtr->axis = axes + x;
-            float pos = axes[x].getPos();
+            Axis * a = axes + x;
+            dstPtr->axis = a;
+            float pos = a->getPos(), ref = a->getRef();
+            if(fabs(pos - ref) <= 2.0) pos = ref;
             dstPtr->pos = pos;
-            lastSaved[x] = pos;
             dstPtr++;
         }
     else
@@ -108,12 +107,19 @@ const char * save(const char * cmd)
         {
             Axis * a = axes + x;
             if(a == axisF && axisH->getPos()) continue;
-            float pos = a->getPos();
-            if(fabs(pos - lastSaved[x]) < 1.0) continue;
-            dstPtr->axis = a;
-            dstPtr->pos = pos;
-            lastSaved[x] = pos;
-            dstPtr++;
+            
+            float pos = a->getPos(), ref = a->getRef();
+            if(fabs(pos - ref) <= 2.0) pos = ref;
+            for(Command * p = dstPtr; p >= program; p--) if(p->axis == a)
+            {
+                if(fabs(p->pos - pos) > 2.0) // Отличается - надо записать отличия
+                {
+                    dstPtr->axis = a;
+                    dstPtr->pos = pos;
+                    dstPtr++;                    
+                }
+                break;
+            }
         }
     if(dstPtr == dp)
     {
