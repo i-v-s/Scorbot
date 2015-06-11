@@ -7676,7 +7676,19 @@
       <name>$PROJ_DIR$\..\src\parser.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\src\queue.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\queue.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\src\stm32_it.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\uart.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\uart.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_desc.c</name>
@@ -7692,6 +7704,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_pwr.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\zero.c</name>

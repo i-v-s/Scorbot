@@ -28,17 +28,17 @@ const char * commit()
 {
     char buf[20];
     sprintf(buf, "commit(%d)", command);
-    sendText(buf);
+    out.log(buf);
     switch(command)
     {
     case 0: return 0;
     case 1:
         pc->axis = 0;
         pc = params;
-        if(!pushCommand(params)) sendText("\nUnable to send command");
+        if(!pushCommand(params)) out.log("\nUnable to send command");
     }
     command = 0;
-    sendText(")");
+    out.log(")");
     return 0;
 }
 
@@ -50,22 +50,22 @@ const char * go(const char * cmd)
 
 const char * list(const char * cmd)
 {
-    sendText("\nList:");
+    out.log("\nList:");
     for(Command * p = program; p->axis; p++)
         if(p->axis != nextCmd)
         {
             char buf[20];
             sprintf(buf, " %c%.1f", axisNames[p->axis - axes] + ('A' - 'a'), p->pos);
-            sendText(buf);
+            out.log(buf);
         }
         else
-            sendText("; ");
+            out.log("; ");
     return 0;
 }
 
 const char * clear(const char * cmd)
 {
-    sendText("Cleared");
+    out.log("Cleared");
     program->axis = 0;
     dstPtr = program;
     return 0;
@@ -85,7 +85,7 @@ const char * pop(const char * cmd)
     }
     char buf[20];
     sprintf(buf, "\nProgram size: %d ", dstPtr - program);
-    sendText(buf);
+    out.log(buf);
     return 0;
 }
 
@@ -123,13 +123,13 @@ const char * save(const char * cmd)
         }
     if(dstPtr == dp)
     {
-        sendText("\nNothing to save");
+        out.log("\nNothing to save");
         return 0;
     }
     (dstPtr++)->axis = nextCmd;
     char buf[20];
     sprintf(buf, "\nProgram size: %d ", dstPtr - program);
-    sendText(buf);
+    out.log(buf);
     dstPtr->axis = 0;
     return 0;
 }
@@ -143,7 +143,7 @@ const char * load(const char * cmd)
     dstPtr = p;
     char buf[20];
     sprintf(buf, "\nProgram size: %d ", p - program);
-    sendText(buf);
+    out.log(buf);
     return 0;
 }
 
@@ -228,19 +228,19 @@ const char * put(const char * cmd)
 
 const char * pos(const char * cmd)
 {
-    sendText("\nPos:");
+    out.log("\nPos:");
     char buf[12];
     for(char x = 0; x < sizeof(axes) / sizeof(Axis); x++)
     {
         sprintf(buf, " %c%.2f", axisNames[x] + ('A' - 'a'), axes[x].getPos());
-        sendText(buf);
+        out.log(buf);
     }
     return 0;
 }
 
 const char * ptp(const char * cmd)
 {
-    sendText("\nPTP(");
+    out.log("\nPTP(");
     command = 1;
     return 0;
 }
@@ -255,7 +255,7 @@ const char * getSwitch(const char * cmd)
 {
     char buf[20];
     sprintf(buf, "\nSw: %X ", switches);
-    sendText(buf);
+    out.log(buf);
     return 0;
 }
 
@@ -301,7 +301,7 @@ const char * onComplex(const char * name, const char * data)
             pc->axis = axes + (t - axisNames);
             pc->pos = f;
             pc++;
-            sendText(bf);
+            out.log(bf);
             return 0;
         }
     }
@@ -313,7 +313,7 @@ const char * onComplex(const char * name, const char * data)
     return "Unknown name";
 }
 
-const char * parse(const unsigned char * data, const unsigned char * end)
+const char * parse(const char * data, const char * end)
 {    
     while(data < end)
     {

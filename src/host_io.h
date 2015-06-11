@@ -1,4 +1,9 @@
+#include "queue.h"
 
-void sendText(const char * text);
+typedef Queue<char, 256> Out;
+
+extern Out out;
+
 void onConfigured();
 void enableOut();
+const char * testOut();

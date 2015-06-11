@@ -164,6 +164,10 @@ void count5(void)
     oldf = a;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void EXTI9_5_IRQHandler(void)
 {
     //int a = GPIOF->IDR;
@@ -180,6 +184,10 @@ void EXTI15_10_IRQHandler(void)
     EXTI->PR = 1 << 10;
 }
 
+#ifdef __cplusplus
+}
+#endif
+
 
 void mx_pinout_config(void) {
 	/* Private typedef ---------------------------------------------------------*/
@@ -187,7 +195,7 @@ void mx_pinout_config(void) {
 
 
 	/*Enable or disable the AHB peripheral clock */
-	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE|RCC_AHBPeriph_GPIOD|RCC_AHBPeriph_GPIOA|RCC_AHBPeriph_GPIOF|RCC_AHBPeriph_GPIOC|RCC_AHBPeriph_GPIOB, ENABLE);
+	RCC_AHBPeriphClockCmd(RCC_AHBPeriph_GPIOE|RCC_AHBPeriph_GPIOD|RCC_AHBPeriph_GPIOA|RCC_AHBPeriph_GPIOF|RCC_AHBPeriph_GPIOC|RCC_AHBPeriph_GPIOB|RCC_AHBPeriph_DMA1, ENABLE);
 
 	/*Configure GPIO pin */
 	GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_8|GPIO_Pin_9|GPIO_Pin_10|GPIO_Pin_11|GPIO_Pin_12|GPIO_Pin_13|GPIO_Pin_14|GPIO_Pin_15|GPIO_Pin_0;
@@ -242,7 +250,7 @@ void mx_pinout_config(void) {
     
     //TIM3->SMCR 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 | RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1 | RCC_APB2Periph_USART1, ENABLE);
     initEncoder(motors + 0, TIM3);
     initMotor(motors + 0, m0f, m0r, m0s);
     
@@ -309,6 +317,16 @@ void mx_pinout_config(void) {
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // USART1 - Bluetooth
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStruct);    
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_7);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_7);
 }
 
 /* USER CODE BEGIN 2 */

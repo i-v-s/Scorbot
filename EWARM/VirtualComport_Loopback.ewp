@@ -5811,7 +5811,7 @@
         </option>
         <option>
           <name>OGBufferedTerminalOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenStdoutInterface</name>
@@ -6029,7 +6029,7 @@
         </option>
         <option>
           <name>CCOptLevel</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CCOptStrategy</name>
@@ -6038,7 +6038,7 @@
         </option>
         <option>
           <name>CCOptLevelSlave</name>
-          <state>1</state>
+          <state>0</state>
         </option>
         <option>
           <name>CompilerMisraRules98</name>
@@ -6064,7 +6064,7 @@
         </option>
         <option>
           <name>IccLang</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccCDialect</name>
@@ -7081,7 +7081,19 @@
       <name>$PROJ_DIR$\..\src\parser.h</name>
     </file>
     <file>
+      <name>$PROJ_DIR$\..\src\queue.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\queue.h</name>
+    </file>
+    <file>
       <name>$PROJ_DIR$\..\src\stm32_it.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\uart.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\uart.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_desc.c</name>
@@ -7097,6 +7109,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_pwr.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\zero.c</name>

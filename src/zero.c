@@ -42,7 +42,7 @@ unsigned char testbf[1000];
 
 char zeroA()
 {
-    sendText("A>> "); motors[0].forward();
+    out.log("A>> "); motors[0].forward();
     int to = ticks + 10;
     char r = 0;
     for(int brk = zt; brk; brk--)
@@ -52,30 +52,30 @@ char zeroA()
         {
             if(r)
             {
-                sendText("A! fail ");
+                out.log("A! fail ");
                 motors[0].stop();
                 return 0;
             } 
             else
             { // Разворачиваем
                 motors[0].reverse();
-                sendText("A! A<< ");
+                out.log("A! A<< ");
                 to = ticks + 10;
                 r = 1;
             }
         }
     }
-    sendText("A<< ");
+    out.log("A<< ");
     motors[0].reverse();
     for(int brk = zt; brk; brk--)
         if(switches & 8) brk = zt;
     setMotorPos(motors + 0, 0);
-    motors[0].stop(); sendText("Aok "); return 1;
+    motors[0].stop(); out.log("Aok "); return 1;
 }
 
 char zeroB()
 {
-    sendText("B>> ");
+    out.log("B>> ");
     motors[1].forward();
     int to = ticks + 30;
     for(int brk = zt, rv2 = zt; brk; brk--)
@@ -84,7 +84,7 @@ char zeroB()
         if(!(sw & 4)) brk = zt;
         if(ticks > to && motors[1].rate < 10)
         {
-            sendText("B! fail ");
+            out.log("B! fail ");
             motors[1].stop();
             motors[2].stop();
             return 0;
@@ -95,28 +95,28 @@ char zeroB()
             motors[1].stop();
             setMotorPos(motors + 2, 500);
             motors[2].reverse();
-            sendText("B<> C<< ");
+            out.log("B<> C<< ");
             while(getMotorPos(motors + 2) > 0);
             motors[1].forward();
-            sendText("B>> ");
+            out.log("B>> ");
             to = ticks + 30;
         }
     }
 
     motors[1].reverse();
-    sendText("B<< ");
+    out.log("B<< ");
     for(int brk = zt; brk; brk--)
         if(switches & 4) brk = zt;
     
     motors[1].stop();
     setMotorPos(motors + 1, 0);
-    sendText("Bok ");
+    out.log("Bok ");
     return 1;
 }
 
 char zeroC()
 {
-    sendText("C>> ");
+    out.log("C>> ");
     motors[2].forward();
     int to = ticks + 30;
     for(int brk = zt; brk; brk--)
@@ -124,25 +124,25 @@ char zeroC()
         if(!(switches & 2)) brk = zt;
         if(ticks > to && motors[2].rate < 10)
         {
-            sendText("C! fail ");
+            out.log("C! fail ");
             motors[2].stop();
             return 0;
         }
     }
-    sendText("C<< ");
+    out.log("C<< ");
     motors[2].reverse();
     for(int brk = zt; brk; brk--)
         if(switches & 2) brk = zt;
 
     motors[2].stop();
     setMotorPos(motors + 2, 0);
-    sendText("Cok ");
+    out.log("Cok ");
     return 1;
 }
 
 char zeroD()
 {
-    sendText("D>> ");
+    out.log("D>> ");
     motors[3].forward();
     motors[4].forward();
     int to = ticks + 20;
@@ -151,12 +151,12 @@ char zeroD()
     {
         int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
         traceFwd(p, 100, 1);
-        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { sendText("D! "); break;}
+        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { out.log("D! "); break;}
     }
     motors[3].stop();
     motors[4].stop();
     while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
-    sendText("D<< ");
+    out.log("D<< ");
     motors[3].reverse();
     motors[4].reverse();
     initRvs(getMotorPos(motors + 3) + getMotorPos(motors + 4));
@@ -166,7 +166,7 @@ char zeroD()
         int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
         traceRvs(p, 1);
         if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) 
-        {motors[3].stop(); motors[4].stop(); sendText("D! fail "); return 0;}
+        {motors[3].stop(); motors[4].stop(); out.log("D! fail "); return 0;}
     }
     motors[3].stop();
     motors[4].stop();
@@ -175,12 +175,12 @@ char zeroD()
     setMotorPos(motors + 3, getMotorPos(motors + 3) - (cp >> 1));
     setMotorPos(motors + 4, getMotorPos(motors + 4) - (cp >> 1));
     
-    sendText("Dok "); return 1;
+    out.log("Dok "); return 1;
 }
 
 char zeroE()
 {
-    sendText("E>> ");
+    out.log("E>> ");
     motors[4].reverse();
     motors[3].forward();
     initFwd();
@@ -196,10 +196,10 @@ char zeroE()
             while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
             //setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
             //setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
-            sendText("E fail ");
+            out.log("E fail ");
             return 0;
         }
-        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { sendText("E! fail "); return 0;}
+        if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { out.log("E! fail "); return 0;}
 
         traceFwd(p, 30, 0x40);
     }
@@ -207,7 +207,7 @@ char zeroE()
     motors[4].stop();
     while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
     
-    sendText("E<< ");
+    out.log("E<< ");
     motors[4].forward();
     motors[3].reverse();
     strt = getMotorPos(motors + 3) - getMotorPos(motors + 4);
@@ -223,7 +223,7 @@ char zeroE()
             while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
             //setMotorPos(motors + 3, getMotorPos(motors + 3) - a);
             //setMotorPos(motors + 4, getMotorPos(motors + 4) - b);
-            sendText("E fail ");
+            out.log("E fail ");
             return 0;
         }
     }
@@ -236,19 +236,19 @@ char zeroE()
     
     //setMotorPos(motors + 3, 0);
     //setMotorPos(motors + 4, 0);
-    sendText("Eok ");
+    out.log("Eok ");
     return 1;
 }
 
 char zeroF()
 {
-    sendText("\nZero: F<< ");
+    out.log("\nZero: F<< ");
     motors[5].reverse();
     int to = ticks + 10;
     
     while(ticks < to || motors[5].rate < -20);
     motors[5].stop();
-    sendText("F! Fok ");
+    out.log("F! Fok ");
     setMotorPos(motors + 5, -50);    
     return 1;
 }

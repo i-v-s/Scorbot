@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1542646942
+Checksum=-1003008487
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -87,7 +87,7 @@ SumSortOrder=0
 [Disassemble mode]
 mode=0
 [Breakpoints2]
-Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\usb_endp.c}.51.1" 0 0 1 "" 0 "" 0
+Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\uart.h}.20.1" 0 0 1 "" 0 "" 0
 Count=1
 [Log file]
 LoggingEnabled=_ 0
