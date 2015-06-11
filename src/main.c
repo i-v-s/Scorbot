@@ -23,6 +23,7 @@
 //#include <misc.h>
 #include "mx_gpio.h"
 #include "host_io.h"
+#include "bluetooth.h"
 #include "controller.h"
 
 uint8_t noZero = 0x3F;
@@ -58,6 +59,7 @@ int main(void)
     USB_Interrupts_Config();
     USB_Init();
     mx_pinout_config();
+    initBluetooth(USART1);
     sendText("Scorbot firmware 0.1 ");
     while(1)
     {

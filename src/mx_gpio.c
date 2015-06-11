@@ -242,7 +242,7 @@ void mx_pinout_config(void) {
     
     //TIM3->SMCR 
     RCC_APB1PeriphClockCmd(RCC_APB1Periph_TIM3 | RCC_APB1Periph_TIM2 | RCC_APB1Periph_TIM4, ENABLE);
-    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1, ENABLE);
+    RCC_APB2PeriphClockCmd(RCC_APB2Periph_TIM8 | RCC_APB2Periph_TIM1 | RCC_APB2Periph_USART1, ENABLE);
     initEncoder(motors + 0, TIM3);
     initMotor(motors + 0, m0f, m0r, m0s);
     
@@ -309,6 +309,16 @@ void mx_pinout_config(void) {
 	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
 	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
 	GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+    // USART1 - Bluetooth
+    GPIO_InitStruct.GPIO_Pin = GPIO_Pin_4|GPIO_Pin_5;
+	GPIO_InitStruct.GPIO_Mode = GPIO_Mode_AF;
+	GPIO_InitStruct.GPIO_OType = GPIO_OType_PP;
+	GPIO_InitStruct.GPIO_PuPd = GPIO_PuPd_NOPULL;
+	GPIO_InitStruct.GPIO_Speed = GPIO_Speed_2MHz;
+	GPIO_Init(GPIOC, &GPIO_InitStruct);    
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource4, GPIO_AF_7);
+    GPIO_PinAFConfig(GPIOC, GPIO_PinSource5, GPIO_AF_7);
 }
 
 /* USER CODE BEGIN 2 */
