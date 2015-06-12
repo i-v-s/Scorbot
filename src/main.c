@@ -59,7 +59,7 @@ int main(void)
     USB_Interrupts_Config();
     USB_Init();
     mx_pinout_config();
-    initBluetooth(USART1);
+    initUART(USART1, DMA1, DMA1_Channel5);
     sendText("Scorbot firmware 0.1 ");
     while(1)
     {

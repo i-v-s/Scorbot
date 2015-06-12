@@ -9,7 +9,7 @@ TriggerName=main
 LimitSize=0
 ByteLimit=50
 [DebugChecksum]
-Checksum=1067184268
+Checksum=-1015012386
 [Exceptions]
 StopOnUncaught=_ 0
 StopOnThrow=_ 0
@@ -35,7 +35,7 @@ ITMportsTermIO=0
 ITMportsLogFile=0
 ITMlogFile=$PROJ_DIR$\ITM.log
 [stlink]
-stlinkserialNo=2798FD0D
+stlinkserialNo=2AFF779E
 stlinkfoundProbes=
 [CodeCoverage]
 Enabled=_ 0
@@ -84,23 +84,24 @@ ShowTimeLog=1
 SumEnabled=0
 ShowTimeSum=1
 SumSortOrder=0
-[Log file]
-LoggingEnabled=_ 0
-LogFile=_ ""
-Category=_ 0
-[TermIOLog]
-LoggingEnabled=_ 0
-LogFile=_ ""
-[CallStackLog]
-Enabled=0
-[CallStackStripe]
-ShowTiming=1
 [Disassemble mode]
 mode=0
 [Breakpoints2]
 Bp0=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\usb_endp.c}.51.1" 0 0 1 "" 0 "" 0
 Bp1=_ 0 "EMUL_CODE" "{$PROJ_DIR$\..\src\mx_gpio.c}.322.1" 0 0 1 "" 0 "" 0
-Count=2
+Bp2=_ 1 "EMUL_CODE" "{$PROJ_DIR$\..\src\bluetooth.c}.35.9" 0 0 1 "" 0 "" 0
+Count=3
+[Log file]
+LoggingEnabled=_ 0
+LogFile=_ ""
+Category=_ 0
 [Aliases]
 Count=0
 SuppressDialog=0
+[CallStackLog]
+Enabled=0
+[CallStackStripe]
+ShowTiming=1
+[TermIOLog]
+LoggingEnabled=_ 0
+LogFile=_ ""
