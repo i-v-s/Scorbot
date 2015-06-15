@@ -5811,7 +5811,7 @@
         </option>
         <option>
           <name>OGBufferedTerminalOutput</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>GenStdoutInterface</name>
@@ -5935,7 +5935,7 @@
         <option>
           <name>CCAllowList</name>
           <version>1</version>
-          <state>00000000</state>
+          <state>11111110</state>
         </option>
         <option>
           <name>CCDebugInfo</name>
@@ -6029,7 +6029,7 @@
         </option>
         <option>
           <name>CCOptLevel</name>
-          <state>0</state>
+          <state>3</state>
         </option>
         <option>
           <name>CCOptStrategy</name>
@@ -6038,7 +6038,7 @@
         </option>
         <option>
           <name>CCOptLevelSlave</name>
-          <state>0</state>
+          <state>3</state>
         </option>
         <option>
           <name>CompilerMisraRules98</name>
@@ -6064,7 +6064,7 @@
         </option>
         <option>
           <name>IccLang</name>
-          <state>0</state>
+          <state>1</state>
         </option>
         <option>
           <name>IccCDialect</name>
@@ -7051,9 +7051,6 @@
   <group>
     <name>User</name>
     <file>
-      <name>$PROJ_DIR$\..\src\bluetooth.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\src\controller.c</name>
     </file>
     <file>
@@ -7100,6 +7097,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_pwr.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\zero.c</name>

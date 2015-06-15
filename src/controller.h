@@ -53,6 +53,14 @@ void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
 void setMotorPos(Motor * motor, int pos);
 
+#ifdef __cplusplus
+ extern "C" {
+#endif
+void addTickHandler(void (* h) ());
+#ifdef __cplusplus
+ }
+#endif
+
 void moveMotor(Motor * motor, int ref);
 void motorsOff(void);
 void motorsOn(void);

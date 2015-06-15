@@ -7646,9 +7646,6 @@
   <group>
     <name>User</name>
     <file>
-      <name>$PROJ_DIR$\..\src\bluetooth.c</name>
-    </file>
-    <file>
       <name>$PROJ_DIR$\..\src\controller.c</name>
     </file>
     <file>
@@ -7695,6 +7692,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\usb_pwr.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\wireless.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\zero.c</name>

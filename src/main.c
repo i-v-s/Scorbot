@@ -23,7 +23,7 @@
 //#include <misc.h>
 #include "mx_gpio.h"
 #include "host_io.h"
-#include "bluetooth.h"
+#include "wireless.h"
 #include "controller.h"
 
 uint8_t noZero = 0x3F;
@@ -50,17 +50,19 @@ void delay_d(void);
 void Enc_prg(void);//аппаратный энкодер #6
 /* Private functions ---------------------------------------------------------*/
 
-
 int main(void)
 {
+    //testOut();
     char enOut = 0;
     Set_System();
-    Set_USBClock();
-    USB_Interrupts_Config();
-    USB_Init();
+    //Set_USBClock();
+    //USB_Interrupts_Config();
+    //USB_Init();
     mx_pinout_config();
-    initUART(USART1, DMA1, DMA1_Channel5);
-    sendText("Scorbot firmware 0.1 ");
+    esp.uartInit(USART1, DMA1, DMA1_Channel5, DMA1_Channel4);
+    initESP();
+    
+    out.log("Scorbot firmware 0.1 ");
     while(1)
     {
 		if(noZero)
@@ -75,14 +77,13 @@ int main(void)
             CDC_Receive_DATA();
             if(Receive_length)
             {
-                if(!enOut) { enOut = 1; enableOut();}
+                //if(!enOut) { enOut = 1; enableOut();}
                 
                 char buf[16];
                 for(int x = 0; x < Receive_length; x++) buf[x] = Receive_Buffer[x];
                 const char * e = parse(buf, buf + Receive_length);
-                //if(Receive_Buffer[0] == 'H')
                 if(e)
-                    sendText(e);
+                    out.log(e);
                 Receive_length = 0;
             }
         }						

@@ -164,6 +164,10 @@ void count5(void)
     oldf = a;
 }
 
+#ifdef __cplusplus
+extern "C" {
+#endif
+
 void EXTI9_5_IRQHandler(void)
 {
     //int a = GPIOF->IDR;
@@ -179,6 +183,10 @@ void EXTI15_10_IRQHandler(void)
     count5();
     EXTI->PR = 1 << 10;
 }
+
+#ifdef __cplusplus
+}
+#endif
 
 
 void mx_pinout_config(void) {
