@@ -25,7 +25,7 @@ if not "%1" == "" goto debugFile
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "C:\PROGS\ARM\Scorbot\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.general.xcl" --backend -f "C:\PROGS\ARM\Scorbot\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "D:\projects\firmware1.1\STM32_USB-FS-Device_Lib_V4.0.0\Projects\VirtualComport_Loopback\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.general.xcl" --backend -f "D:\projects\firmware1.1\STM32_USB-FS-Device_Lib_V4.0.0\Projects\VirtualComport_Loopback\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.driver.xcl" 
 
 @echo off 
 goto end 
@@ -34,7 +34,7 @@ goto end
 
 @echo on 
 
-"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "C:\PROGS\ARM\Scorbot\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.general.xcl" "--debug_file=%1" --backend -f "C:\PROGS\ARM\Scorbot\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.driver.xcl" 
+"C:\Program Files (x86)\IAR Systems\Embedded Workbench 7.2\common\bin\cspybat" -f "D:\projects\firmware1.1\STM32_USB-FS-Device_Lib_V4.0.0\Projects\VirtualComport_Loopback\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.general.xcl" "--debug_file=%1" --backend -f "D:\projects\firmware1.1\STM32_USB-FS-Device_Lib_V4.0.0\Projects\VirtualComport_Loopback\EWARM\settings\VirtualComport_Loopback.STM32303C_EVAL.driver.xcl" 
 
 @echo off 
 :end
