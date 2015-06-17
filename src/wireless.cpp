@@ -6,31 +6,14 @@
 
 /////////////////////////////////// Классы для работы с ESP8266 ////////////////////////////////////
 
-/*void * ESP::parseDef(ESP * th, char * &t, char * e) 
-{ 
-    while(t < e) if(*(t++) == '\n') return (void *)&parseLine;
-    return (void *)&parseDef;
-}
-
-void * ESP::parseLine(ESP * th, char * &t, char * e)
+ESPCMD * ESP::onCmd(void * obj, ESPCMD * cmd, ESPCMD * end)
 {
-    char c = *t;
-    if(c >= 'A' && c <= 'Z') {dst = val; return (void *)parseRes;}
-    if(c == '+') {t++; dst = var; return (void *)parseVar;}
-    return (void *)&parseLine;
+    ESP * esp = (ESP *) obj;
+    if(esp->expectResult) return cmd;
+    esp->tx.log(cmd->cmd);
+    esp->expectResult = cmd->result;
+    return cmd + 1;
 }
-
-void * ESP::parseVar(ESP * th, char * &t, char * e) 
-{ 
-    while(t < e)
-    {
-        char c = *t++;        
-        if(c == ':') return (void *)&parseValue;
-        if(c >= 'A' && c <= 'Z') *(dst++) = c;
-    }
-    return (void *)&parseDef;
-}*/
-
 
 char * ESP::parseRX(void * obj, char * text, char * end)
 {
@@ -48,35 +31,44 @@ char * ESP::parseRX(void * obj, char * text, char * end)
         case 0:
             if(c == '\n') { if(dst > var) ; state = 1; dst = val; continue;}
             break;
-        case 1: 
-            if(c >= 'A' && c <= 'Z') *(dst++) = c;
-            else if(c >= '0' && c <= '9') { state = 4; esp->client = c - '0'; break;}
-            else if(c == '+') { state = 2; dst = var;}
-            else if(c == '>') { state = 9; break;}
-            else if(c == '\n' || c == '\r') 
+        case 1:
+            if(!esp->expectResult)
+            {
+                if(c >= '0' && c <= '9') { state = 4; esp->client = c - '0'; break;}
+                else if(c == '+') { state = 2; dst = var; break;}
+                else if(c == '>') { state = 9; break;}
+            }
+            if(c == '\n' || c == '\r') 
             { 
                 if(dst > val) 
                 {
                     *dst = 0;
-                    
-                    if(!strcmp(val, "OK"))
+                    if(esp->expectResult && !strcmp(val, esp->expectResult))
                     {
-                        if(esp->outList && *esp->outList)
+                        esp->expectResult = 0;
+                        esp->cmds.pull();
+                        /*if(esp->outList && *esp->outList)
                             esp->tx.log(*(esp->outList++));
                         else
-                            if(esp->onDone) esp->onDone(true);
+                            if(esp->onDone) esp->onDone(true);*/
                     }
                     else if(!strcmp(val, "ERROR"))
                     {
                         //char buf[64];
                         out.log("ESP error:");
-                        if(esp->outList) out.log(esp->outList[-1]);
-                        if(esp->onDone) esp->onDone(false);
+                        //if(esp->outList) out.log(esp->outList[-1]);
+                        //if(esp->onDone) esp->onDone(false);
+                    }
+                    else if(!strcmp(val, "invalid"))
+                    {
+                        
+                        
                     }
                 }; 
                 dst = val;
                 continue;
             }
+            else *(dst++) = c;
             break;
         case 2:
             if(c >= 'A' && c <= 'Z') *(dst++) = c;
@@ -160,6 +152,7 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                     esp->tx.source = &out;
                     out.log("+++");
                     out.pull();
+                    state = 0;
                 }
                 
             }
@@ -219,36 +212,24 @@ void ESP::set(const char * var, const char * value, void (* done)(bool Ok))
     onDone = done;
 }
 
-void ESP::exec(const char **list)
-{
-    if(!list) {outList = 0; return;}
-    tx.log(*(list++));
-    outList = list;
-}
-
-const char * initEsp[10];
-
 void ESP::espInit(const AP * list, const char * ap)
 {
-    const char * * t = initEsp;
-    //*(t++) = "+++";
-    *(t++) = "ATE0\r\n";
+    cmds.push(ESPCMD("AT+RST\r\n", "invalid"));
+    cmds.push(ESPCMD("ATE0\r\n"));
     aps = list;
     if(list)
     {
-        *(t++) = "AT+CWMODE=1\r\n";
-        *(t++) = "AT+CWLAP\r\n";
+        cmds.push(ESPCMD("AT+CWMODE=1\r\n"));
+        cmds.push(ESPCMD("AT+CWLAP\r\n"));
     }
     else
     {
-        *(t++) = "AT+CWMODE=2\r\n";
-        *(t++) = ap;
+        cmds.push(ESPCMD("AT+CWMODE=2\r\n"));
+        cmds.push(ESPCMD(ap));
     }
-    *(t++) = "AT+CIPMUX=1\r\n";
-    *(t++) = "AT+CIPSERVER=1,8080\r\n";
-    *(t++) = "AT+CIFSR\r\n";
-    *t = 0;
-    exec(initEsp);
+    cmds.push(ESPCMD("AT+CIPMUX=1\r\n"));
+    cmds.push(ESPCMD("AT+CIPSERVER=1,8080\r\n"));
+    cmds.push(ESPCMD("AT+CIFSR\r\n"));
 }
 
 const char * ESP::send(void * obj, const char * data, const char * end)
