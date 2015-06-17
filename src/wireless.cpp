@@ -214,7 +214,13 @@ void ESP::set(const char * var, const char * value, void (* done)(bool Ok))
 
 void ESP::espInit(const AP * list, const char * ap)
 {
-    cmds.push(ESPCMD("AT+RST\r\n", "invalid"));
+    GPIOB->BRR = GPIO_Pin_1;//GPIO_Pin_13; //move
+    for(int x = 100000; x--;);
+    GPIOB->BSRR = GPIO_Pin_1;
+    //for(int x = 100000; x--;);
+
+    expectResult = "invalid";
+    //cmds.push(ESPCMD("AT+RST\r\n", "invalid"));
     cmds.push(ESPCMD("ATE0\r\n"));
     aps = list;
     if(list)
