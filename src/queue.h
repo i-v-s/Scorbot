@@ -96,6 +96,20 @@ public:
         pull();
         return text + size;
     }
+    inline bool push(const T &val) { return push(&val, &val + 1) > &val;}
+    inline bool pop(T * result = 0) 
+    {
+        T * s;
+        do
+        {
+            s = (T *)__LDREX((unsigned long *)&src);
+            if(s == dst) { __CLREX(); return false;}
+            if(result) *result = *(s++);
+            if(s >= data + SIZE) s -= SIZE;
+        } while(__STREX((unsigned long)s, (unsigned long *)&src));
+        return true;
+    }
+    inline const T * last() const {T * s = src; return (dst == s) ? 0 : s;}
     static const T * input(void * obj, const T * start, const T * end)
     {
         Queue<T, SIZE> * q = (Queue<T, SIZE> *) obj;
