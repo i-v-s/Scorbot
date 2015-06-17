@@ -45,12 +45,13 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                     *dst = 0;
                     if(esp->expectResult && !strcmp(val, esp->expectResult))
                     {
-                        esp->expectResult = 0;
+                        esp->expectResult = 0; 
                         esp->cmds.pull();
-                        /*if(esp->outList && *esp->outList)
-                            esp->tx.log(*(esp->outList++));
-                        else
-                            if(esp->onDone) esp->onDone(true);*/
+                    }
+                    else if(!strcmp(val, "SEND OK"))
+                    {
+                        esp->busy = false;
+                        out.pull();
                     }
                     else if(!strcmp(val, "ERROR"))
                     {
@@ -58,11 +59,6 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                         out.log("ESP error:");
                         //if(esp->outList) out.log(esp->outList[-1]);
                         //if(esp->onDone) esp->onDone(false);
-                    }
-                    else if(!strcmp(val, "invalid"))
-                    {
-                        
-                        
                     }
                 }; 
                 dst = val;
@@ -99,18 +95,18 @@ char * ESP::parseRX(void * obj, char * text, char * end)
             else if(c == '\n' || c == '\r')
             {
                 *dst = 0;
-                state = 0;
+                int mask = 1 << esp->client;
                 if(!strcmp(val, "CONNECT")) 
                 {
-                    if(esp->onConnect) esp->onConnect(esp->client);
-                    esp->parseOn = false; 
-                } 
-                else if(!strcmp(val, "CLOSED"))
-                {
-                    if(esp->onDisconnect) esp->onDisconnect(esp->client);
-                    
-                    // 
+                    esp->connects |= mask;
+                    esp->ready &= ~mask;
                 }
+                else if(!strcmp(val, "CLOSED")) 
+                {
+                    esp->ready &= esp->connects &= ~mask;
+                    if(!esp->ready) out.output.set(0);
+                }
+                state = 0;
             }
             break;
         case 6:
@@ -128,37 +124,73 @@ char * ESP::parseRX(void * obj, char * text, char * end)
             {
                 char * e = text + size;
                 if(e > end) e = end;
-                if(esp->parseOn)
+                int mask = 1 << esp->client;
+                if(esp->ready & mask)
                 {                    
                     const char * msg = parse(text, e);
                     if(msg) out.log(msg);
                 }
                 size -= e - text;
                 text = e;
-                if(!size) 
+                if(!size)
                 {
-                    state = 0; esp->parseOn = true;
-                    esp->tx.log("AT+CIPSEND=0,50\r\n");
-                    //out.output.set(esp->send, esp);
-                    //out.pull();
+                    state = 0;
+                    //esp->tx.log("AT+CIPSEND=0,50\r\n");
+                    //esp->tx.log("AT+CIPSEND=0,5\r\n");
+                    if(!(esp->ready & mask))
+                    {
+                        esp->ready |= mask;
+                        out.output.set(esp->send, esp);
+                        out.pull();
+                    }
+                    
                 }
             }
             break;
-        case 9:
+        case 9: // Приглашение к отправке данных
             {
                 if(c == ' ')
                 {
-                    out.output.set(esp->tx.input, esp);
-                    esp->tx.source = &out;
-                    out.log("+++");
+                    esp->busy = false;
                     out.pull();
-                    state = 0;
+                    //out.output.set(esp->tx.input, esp);
+                    //esp->tx.source = &out;
+                    //out.log("+++");
+                    //out.pull();
                 }
-                
+                state = 0;
             }
         }
     }
     return end;
+}
+
+const char * ESP::send(void * obj, const char * data, const char * end)
+{
+    ESP * esp = (ESP *)obj;
+    if(esp->busy || !esp->ready) return data;
+    int len = esp->sendSize;
+    if(!len)
+    {
+        len = out.length();
+        int m = esp->ready;
+        int id = 0;
+        while(m && !(m & 1)) { m >>= 1; id++;}
+        //if(len > 5) len = 5;
+        
+        char buf[20];
+        int l = sprintf(buf, "AT+CIPSEND=%d,%d\r\n", id, len);
+        esp->sendSize = len;
+        esp->busy = true;
+        esp->tx.push(buf, buf + l);
+        return data;
+    }
+    
+    if(end > data + len) end = data + len;
+    const char * result = esp->tx.push(data, end);
+    esp->sendSize = len - (result - data);
+    esp->busy = !esp->sendSize;
+    return result;
 }
 
 void ESP::onCWLAP(char * val)
@@ -190,7 +222,6 @@ void ESP::echo(bool e, void (* done)(bool Ok))
 {
     onDone = done;
     tx.log(e ? "ATE1\r\n" : "ATE0\r\n");
-    //outDisable(); // Надо дождаться, когда придёт ответ
 }
 
 /*void ESP::query(const char * query, void (* done)(const char * res))
@@ -238,55 +269,11 @@ void ESP::espInit(const AP * list, const char * ap)
     cmds.push(ESPCMD("AT+CIFSR\r\n"));
 }
 
-const char * ESP::send(void * obj, const char * data, const char * end)
-{
-    ESP * esp = (ESP *)obj;
-    int len = esp->sendSize;
-    if(!len)
-    {
-        len = out.length();
-        if(len > 16) len = 16;
-        char buf[20];
-        int l = sprintf(buf, "AT+CIPSEND=%d,%d\r\n", 0, len);
-        esp->tx.push(buf, buf + l);
-        return data;
-    }
-    
-    if(end > data + len) end = data + len;
-    const char * result = esp->tx.push(data, end);
-    esp->sendSize = len - (result - data);
-    return result;
-}
-
-
-////////////////////////////////////////////////////////////////////////////////////////////////////
-
 ESP esp;
 UART &uart = esp;
 
 
-
-
-void espConnect(int id)
-{
-    //out.output.set(esp.send, &esp);
-    //uart.tx.source = &out;
-    //out.pull();
-}
-
-void espDisconnect(int id)
-{
-    out.output.set(0);
-    uart.tx.source = 0;
-}
-
 void initESP()
 {   
-    //esp.exec(initEsp);
-    //AP aps[] = {{"water", "888waterparol"}, {0}};
-    esp.onConnect = espConnect;
-    esp.onDisconnect = espDisconnect;
     esp.espInit(0/*aps*/, "AT+CWSAP=\"Scorbot\",\"aaa\",1,0\r\n");
 }
-
-

@@ -12,7 +12,7 @@ struct ESPCMD
 class ESP: public UART
 {
 private:
-    bool parseOn;
+    bool busy;
     int client, size, state;
     char var[32], val[64], * dst;
     void (* onDone)(bool Ok);
@@ -21,11 +21,9 @@ private:
     int sendSize;
     const AP * aps, * currentAP;
     void onCWLAP(char * val);
-//protected:
-    //virtual 
-    //virtual void onTX();
     static ESPCMD * onCmd(void * obj, ESPCMD * cmd, ESPCMD * end);
     static char * parseRX(void * obj, char * text, char * end);
+    unsigned int connects, ready; // Соединения и готовые к работе
 public:
     void espInit(const AP * list, const char * ap);
     //void query(const char * query, void (* done)(const char * res));
@@ -33,9 +31,10 @@ public:
     static const char * send(void * obj, const char * data, const char * end);
     void echo(bool e, void (* done)(bool Ok));
     void exec(const char * * list);
-    void (* onConnect) (int id);
-    void (* onDisconnect) (int id);
-    ESP(): dst(var), state(0), aps(0), sendSize(0), expectResult(0) { rxOutput.set(&parseRX, this); cmds.output.set(&onCmd, this);};
+    ESP(): dst(var), state(0), aps(0), sendSize(0), expectResult(0), connects(0), ready(0), busy(false)
+    { 
+        rxOutput.set(&parseRX, this); cmds.output.set(&onCmd, this);
+    };
 };
 
 extern ESP esp;
