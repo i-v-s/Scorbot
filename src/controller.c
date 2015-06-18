@@ -3,7 +3,7 @@
 #include "host_io.h"
 #include "hw_config.h"
 #include <string.h>
-
+#include "kinematics.h"
 
 volatile int ticks = 0;
 
@@ -63,13 +63,17 @@ float Hpos() { return (float)hold / 2.55;}
 
 Axis axes[7] = 
 { //               ш/ед     ноль
-    {Apos, Aref, Amove,  42.88900,  -58},
-    {Bpos, Bref, Bmove,  33.02200, 1400},
-    {Cpos, Cref, Cmove,  33.93700,  149},
-    {Dpos, Dref, Dmove, -16.66666,  160},
-    {Epos, Eref, Emove, -16.66666,  350},
-    {Fpos, Fref, Fmove,   8.00000,    0},
-    {Hpos, Hpos, Hmove}
+    {Apos, Aref, Amove,  42.88900,  -58}, // A - ось вращения платформы, градусы
+    {Bpos, Bref, Bmove,  33.02200, 1400}, // B - плечевой сустав, градусы
+    {Cpos, Cref, Cmove,  33.93700,  149}, // C - локтевой сустав, градусы
+    {Dpos, Dref, Dmove, -16.66666,  160}, // D - кистевой сустав, градусы
+    {Epos, Eref, Emove, -16.66666,  350}, // E - вращение клешнёй, градусы
+    {Fpos, Fref, Fmove,   8.00000,    0}, // F - положение клешни в разжатом состоянии, %
+    {Hpos, Hpos, Hmove},                  // H - сила сжатия клешни, % (пока 0 или 100)
+    {Rpos, Rref},                         // R - радиус, расстояние от центра платформы до захватов, мм.
+    {Xpos, Xref},                         // X, Y, Z - координаты средней точки между захватами, мм (Z - высота)
+    {Ypos, Yref},
+    {Zpos, Zref}
 };
 
 const char axisNames[] = "abcdefh";
