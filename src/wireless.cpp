@@ -3,6 +3,7 @@
 #include <string.h>
 #include "parser.h"
 #include "wireless.h"
+#include "controller.h"
 
 /////////////////////////////////// Классы для работы с ESP8266 ////////////////////////////////////
 
@@ -15,9 +16,21 @@ ESPCMD * ESP::onCmd(void * obj, ESPCMD * cmd, ESPCMD * end)
     return cmd + 1;
 }
 
+void ESP::tickHandler(void * obj)
+{
+    ESP * esp = (ESP *) obj;
+    if(esp->timeOut) esp->timeOut--;
+    else
+    {
+        esp->tx.log("AT\r\n");
+        esp->timeOut = 1000;
+    }
+}
+
 char * ESP::parseRX(void * obj, char * text, char * end)
 {
     ESP * esp = (ESP *) obj;
+    //esp->timeOut = 1000;
     char * &dst = esp->dst;
     int &state = esp->state;
     char * const var = esp->var;
@@ -267,6 +280,7 @@ void ESP::espInit(const AP * list, const char * ap)
     cmds.push(ESPCMD("AT+CIPMUX=1\r\n"));
     cmds.push(ESPCMD("AT+CIPSERVER=1,8080\r\n"));
     cmds.push(ESPCMD("AT+CIFSR\r\n"));
+    addTickHandler(tickHandler, this);
 }
 
 ESP esp;

@@ -13,7 +13,7 @@ class ESP: public UART
 {
 private:
     bool busy;
-    int client, size, state;
+    int client, size, state, timeOut;
     char var[32], val[64], * dst;
     void (* onDone)(bool Ok);
     Queue<ESPCMD, 16> cmds;
@@ -24,6 +24,7 @@ private:
     static ESPCMD * onCmd(void * obj, ESPCMD * cmd, ESPCMD * end);
     static char * parseRX(void * obj, char * text, char * end);
     unsigned int connects, ready; // Соединения и готовые к работе
+    static void tickHandler(void * obj);
 public:
     void espInit(const AP * list, const char * ap);
     //void query(const char * query, void (* done)(const char * res));
@@ -31,7 +32,7 @@ public:
     static const char * send(void * obj, const char * data, const char * end);
     void echo(bool e, void (* done)(bool Ok));
     void exec(const char * * list);
-    ESP(): dst(var), state(0), aps(0), sendSize(0), expectResult(0), connects(0), ready(0), busy(false)
+    ESP(): dst(var), state(0), aps(0), sendSize(0), expectResult(0), connects(0), ready(0), busy(false), timeOut(1000)
     { 
         rxOutput.set(&parseRX, this); cmds.output.set(&onCmd, this);
     };
