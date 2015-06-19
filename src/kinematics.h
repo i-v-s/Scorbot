@@ -6,7 +6,7 @@
 
 Возможны следующие преобразования:
 
-A, B, C, D => X, Y, Z - прямая кинематика, функция XYZpos
+A, B, C, D => X, Y, Z - прямая кинематика, функция RXYZpos
 X, Y, Z, D => A, B, C - инверсная кинематика, функция XYZmove
 [A,] B, C, D => [A,] R, Z - перевод в полярные координаты, функция RZpos
 [A,] R, Z, D => [A,] B, C - перевод из полярных координат, функция RZmove
@@ -14,4 +14,17 @@ X, Y, Z, D => A, B, C - инверсная кинематика, функция XYZmove
 
 */
 
-void RZpos();
+struct RXYZ
+{
+    float R, X, Y, Z;
+};
+
+void RZpos(RXYZ * d);
+void RXYZpos(RXYZ * d);
+void RZref(RXYZ * d);
+void RXYZref(RXYZ * d);
+
+bool RZmoveTo(float R, float Z);
+bool XYZmoveTo(float X, float Y, float Z);
+
+void testKinematics();

@@ -25,6 +25,7 @@
 #include "host_io.h"
 #include "wireless.h"
 #include "controller.h"
+#include "kinematics.h"
 
 uint8_t noZero = 0x3F;
 
@@ -50,9 +51,17 @@ void delay_d(void);
 void Enc_prg(void);//аппаратный энкодер #6
 /* Private functions ---------------------------------------------------------*/
 
+void test()
+{
+    testKinematics();
+    while(1);
+}
+
 int main(void)
 {
-    //testOut();
+#ifdef _TEST_
+    test();
+#endif    
     char enOut = 0;
     Set_System();
     //Set_USBClock();
