@@ -16,15 +16,35 @@ ESPCMD * ESP::onCmd(void * obj, ESPCMD * cmd, ESPCMD * end)
     return cmd + 1;
 }
 
+int ledoff = 0;
+int gloff = 0;
+int pwmval = 0, pwmct = 0, pwmdst = 0;
+
+
 void ESP::tickHandler(void * obj)
 {
     ESP * esp = (ESP *) obj;
     if(esp->timeOut) esp->timeOut--;
     else
     {
+        GPIOE->BSRR = 1 << 13;
         esp->tx.log("AT\r\n");
         esp->timeOut = 1000;
     }
+    if(ledoff)
+    {
+        ledoff--;
+        if(!ledoff) GPIOE->BRR = 1 << 13;
+    }
+    if(pwmct == (pwmval >> 2)) GPIOE->BSRR = 1 << 15;
+    if(!pwmct)
+    {
+        GPIOE->BRR = 1 << 15;
+        pwmct = 5;
+        if(pwmval > pwmdst) pwmval--;
+        else if(pwmval < pwmdst) pwmval++;
+    }
+    else pwmct--;    
 }
 
 char * ESP::parseRX(void * obj, char * text, char * end)
@@ -56,6 +76,8 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 if(dst > val) 
                 {
                     *dst = 0;
+                    if(!strcmp(val, "OK")) ledoff = 20;
+                       
                     if(esp->expectResult && !strcmp(val, esp->expectResult))
                     {
                         esp->expectResult = 0; 
@@ -113,11 +135,17 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 {
                     esp->connects |= mask;
                     esp->ready &= ~mask;
+                    pwmval = 20;
+                    pwmdst = 20;
                 }
                 else if(!strcmp(val, "CLOSED")) 
                 {
                     esp->ready &= esp->connects &= ~mask;
-                    if(!esp->ready) out.output.set(0);
+                    if(!esp->ready)
+                    {
+                        out.output.set(0);
+                        pwmdst = 0;
+                    }
                 }
                 state = 0;
             }

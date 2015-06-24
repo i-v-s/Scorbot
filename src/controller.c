@@ -126,8 +126,9 @@ void SysTick_Handler(void)
         m->oldPos = pos;
         int rate = m->rate;
         m->rate = rate - ((rate - d * SysTickFreq) >> 3);
-    }   
-    GPIOE->ODR = 0x4F00 & ~GPIOD->IDR;
+    }
+    int sw = 0x4F00 & ~GPIOD->IDR;
+    GPIOE->BSRR = sw | 0x4F000000;
     for(TickHandler * x = tickHandlers; x < thDst; x++) x->method(x->obj);
 }
 
