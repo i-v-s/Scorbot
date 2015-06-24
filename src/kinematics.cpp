@@ -12,18 +12,64 @@
 #define PI180 0.017453292519943295769
 #define PI2 1.570796326794897
 
-void RZpos(RXYZ * d)
+// Прямая кинематика
+
+void BCDtoRZ(RXYZ * d, float B, float C, float D)
 {
-    float B = axisB->getPos() * PI180, C = axisC->getPos() * PI180, D = axisD->getPos() * PI180;
+    B *= PI180; C *= PI180; D *= PI180;
     d->R = R0 + L1 * sin(B) + L2 * cos(C) + L3 * sin(D);
     d->Z = Z0 + L1 * cos(B) - L2 * sin(C) - L3 * cos(D);
 }
 
+void ABCDtoRXYZ(RXYZ * d, float A, float B, float C, float D)
+{
+    BCDtoRZ(d, B, C, D);
+    A *= PI180;
+    d->X = d->R * cos(A);
+    d->Y = d->R * sin(A);
+}
+
+// Обратная кинематика
+
+bool RZtoBC(ABC * abc, float R, float Z, float D)
+{
+    R -= R0 + L3 * sin(D);
+    Z -= Z0 - L3 * cos(D);
+    float L = sqrt(R * R + Z * Z);
+    if(L > L1 + L2) return false;
+    float a = atan2(Z, R);
+#if L1 == L2
+    float t = acos(L / (L1 + L2));
+    float B = (PI2 - a - t) / PI180;
+    float C = (t - a) / PI180;
+#else
+    float sq = sqrt(L1 * L1 - L2 * L2) / L;
+    float B = (PI2 - a - acos((L + sq) / (2.0 * L1))) / PI180;
+    float C = (a - acos((L - sq) / (2.0 * L2))) / PI180;
+#endif
+    abc->B = B;
+    abc->C = C;
+    return true;
+}
+
+bool XYZtoABC(ABC * abc, float X, float Y, float Z, float D)
+{
+    float R = sqrt(X * X + Y * Y);
+    if(!RZtoBC(abc, R, Z, D)) return false;
+    abc->A = atan2(Y, X) / PI180;
+    return true;
+}
+
+////////////////////////////////////////////////////////////////////////////////
+
+void RZpos(RXYZ * d)
+{
+    BCDtoRZ(d, axisB->getPos(), axisC->getPos(), axisD->getPos());
+}
+
 void RZref(RXYZ * d)
 {
-    float B = axisB->getRef() * PI180, C = axisC->getRef() * PI180, D = axisD->getRef() * PI180;
-    d->R = R0 + L1 * sin(B) + L2 * cos(C) + L3 * sin(D);
-    d->Z = Z0 + L1 * cos(B) - L2 * sin(C) - L3 * cos(D);
+    BCDtoRZ(d, axisB->getRef(), axisC->getRef(), axisD->getRef());
 }
 
 void RXYZpos(RXYZ * d)
@@ -44,40 +90,26 @@ void RXYZref(RXYZ * d)
 
 bool RZmoveTo(float R, float Z)
 {
-    float D = axisD->getRef() * PI180;
-    R -= R0 + L3 * sin(D);
-    Z -= Z0 - L3 * cos(D);
-    char b[50];
-    sprintf(b, "R = %f, Z = %f", R, Z);
-    float L = sqrt(R * R + Z * Z);
-    if(L > L1 + L2) return false;
-    float a = atan2(Z, R);
-#if L1 == L2
-    float t = acos(L / (L1 + L2));
-    float B = (PI2 - a - t) / PI180;
-    float C = (t - a) / PI180;
-#else
-    float sq = sqrt(L1 * L1 - L2 * L2) / L;
-    float B = (PI2 - a - acos((L + sq) / (2.0 * L1))) / PI180;
-    float C = (a - acos((L - sq) / (2.0 * L2))) / PI180;
-#endif
-    axisB->moveTo(B);
-    axisC->moveTo(C);
+    ABC abc;
+    if(!RZtoBC(&abc, R, Z, axisD->getRef() * PI180)) return false;
+    axisB->moveTo(abc.B);
+    axisC->moveTo(abc.C);
     return true;
 }
 
 bool XYZmoveTo(float X, float Y, float Z)
 {
-    float R = sqrt(X * X + Y * Y);
-    if(!RZmoveTo(R, Z)) return false;
-    float A = atan2(Y, X) / PI180;
-    axisA->moveTo(A);
+    ABC abc;
+    if(!XYZtoABC(&abc, X, Y, Z, axisD->getRef() * PI180)) return false;
+    axisA->moveTo(abc.A);
+    axisB->moveTo(abc.B);
+    axisC->moveTo(abc.C);
     return true;
 }
 
-bool testRZ()
+bool testRZmoveTo()
 {
-    out.log("RZ ");
+    out.log("RZmoveTo ");
     for(float D = -90; D < 90; D += 20.0)
     for(float B = -50; B < 120; B += 10.0)
     for(float C = B - 90; C < B + 90; C += 10.0)
@@ -104,9 +136,44 @@ bool testRZ()
     return true;
 }
 
-bool testXYZ()
+bool testXYZtoABC()
 {
-    out.log("XYZ ");
+    out.log("XYZtoABC ");
+    for(float D =  -30; D < 190; D += 20.0)
+    {
+        axisD->moveTo(D);
+
+        for(float X = -400; X < 400; X += 70.0)
+        for(float Y = -400; Y < 400; Y += 70.0)
+        for(float Z = -400; Z < 400; Z += 70.0)
+        {
+            ABC abc;
+            RXYZ d;
+            if(!XYZtoABC(&abc, X, Y, Z, D * PI180)) continue;
+            ABCDtoRXYZ(&d, abc.A, abc.B, abc.C, D);
+            if(fabs(X - d.X) > 0.5)
+            {
+                out.log("X mismatch"); 
+                return false;
+            }
+            if(fabs(Y - d.Y) > 0.5)
+            {
+                out.log("Y mismatch"); 
+                return false;
+            }        
+            if(fabs(Z - d.Z) > 0.5)
+            {
+                out.log("Z mismatch"); 
+                return false;
+            }        
+        }
+    }
+    return true;
+}
+
+bool testXYZmoveTo()
+{
+    out.log("XYZmoveTo ");
     for(float D =  180; D < 190; D += 10.0)
     {
         axisD->moveTo(D);
@@ -123,6 +190,16 @@ bool testXYZ()
                 out.log("X mismatch"); 
                 return false;
             }
+            if(fabs(Y - d.Y) > 0.5)
+            {
+                out.log("Y mismatch"); 
+                return false;
+            }        
+            if(fabs(Z - d.Z) > 0.5)
+            {
+                out.log("Z mismatch"); 
+                return false;
+            }        
         }
     }
     return true;
@@ -131,8 +208,9 @@ bool testXYZ()
 void testKinematics()
 {
     out.log("\nKinematics test: ");
-    testRZ();
-    testXYZ();
+    testXYZtoABC();
+    testRZmoveTo();
+    testXYZmoveTo();
     
     out.log("ok ");
 }

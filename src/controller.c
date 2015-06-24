@@ -61,7 +61,7 @@ void Hmove(float pos)
 
 float Hpos() { return (float)hold / 2.55;}
 
-Axis axes[7] = 
+Axis axes[11] = 
 { //               ш/ед     ноль
     {Apos, Aref, Amove,  42.88900,  -58}, // A - ось вращения платформы, градусы
     {Bpos, Bref, Bmove,  33.02200, 1400}, // B - плечевой сустав, градусы
@@ -70,13 +70,11 @@ Axis axes[7] =
     {Epos, Eref, Emove, -16.66666,  350}, // E - вращение клешнёй, градусы
     {Fpos, Fref, Fmove,   8.00000,    0}, // F - положение клешни в разжатом состоянии, %
     {Hpos, Hpos, Hmove},                  // H - сила сжатия клешни, % (пока 0 или 100)
-    /*{Rpos, Rref},                         // R - радиус, расстояние от центра платформы до захватов, мм.
-    {Xpos, Xref},                         // X, Y, Z - координаты средней точки между захватами, мм (Z - высота)
-    {Ypos, Yref},
-    {Zpos, Zref}*/
+    {0},                                  // R - радиус, расстояние от центра платформы до захватов, мм.
+    {0}                                   // X, Y, Z - координаты средней точки между захватами, мм (Z - высота)
 };
 
-const char axisNames[] = "abcdefh";
+const char axisNames[] = "abcdefhrxyz";
 
 void initEncoder(Motor * motor, TIM_TypeDef * timer)
 {
@@ -205,10 +203,27 @@ int ctlHold(Motor * m)
 Command commands[64];
 Command * volatile cmdSrc = commands, * volatile cmdDst = commands;
 
-char pushCommand(Command * cmd)
+bool pushCommand(Command * cmd)
 {
     int len = 0;
     for(Command * t = cmd; t->axis; t++) len++;
+    /*bool ap = false, bcp = false, rp = true;
+    for(Command * t = cmd; t->axis; t++) 
+    {
+        len++;
+        Axis * a = t->axis;       
+        if(a == axisA) ap = true;
+        else if(a == axisB || a == axisC) bcp = true;
+        else if(a == axisR) 
+        { 
+            if(bcp) { out.log("Axes B&C cannot be used with R"); return false;}
+        }
+        else if(a == axisX || a == axisY)
+        {
+            if(bcp) { out.log("Axes B&C cannot be used with X&Y"); return false;}
+            
+        }
+    }*/
     
     Command * s = cmdSrc, * d = cmdDst;
     int empty = (s - d - 2) & (sizeof(commands) / sizeof(Command) - 1); // Сколько всего места в буфере осталось
@@ -242,13 +257,55 @@ void allStop()
     cmdPtr = 0;
 }
 
+Command * moveTo(Command * c)
+{
+    RXYZ pos;
+    int mask = 0; // "rxyz"
+    for( ; c->axis && c->axis != nextCmd; c++)
+    {
+        Axis * a = c->axis;
+        if(a <= axisH) a->moveTo(c->pos);
+        else 
+        {
+            int t = a - axisR;
+            ((float *)&pos)[t] = c->pos;
+            mask |= 1 << t;
+        }
+    }
+    if(mask & 0x6) // xy(z)
+    {
+        if((mask & 0xE) != 0xE) 
+        {
+            RXYZ pp;
+            RXYZref(&pp);
+            if(!(mask & 0x2)) pos.X = pp.X;
+            if(!(mask & 0x4)) pos.Y = pp.Y;
+            if(!(mask & 0x8)) pos.Z = pp.Z;
+        }
+        XYZmoveTo(pos.X, pos.Y, pos.Z);
+    } 
+    else if(int m = mask & 0x9) // rz
+    {
+        if(m != 0x9)
+        {
+            RXYZ pp;
+            RZref(&pp);
+            if(!(m & 0x1)) pos.R = pp.R;
+            if(!(m & 0x8)) pos.Z = pp.Z;
+        }
+        RZmoveTo(pos.R, pos.Z);
+    }
+    return c;
+}
+
 void runCmd() 
 {               // Читаем команду
     if(cmdPtr)  // из программы
     {
         if(cmdPtr->axis == nextCmd) cmdPtr++;
-        for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
-            cmdPtr->axis->moveTo(cmdPtr->pos);
+        cmdPtr = moveTo(cmdPtr);
+        //for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
+            //cmdPtr->axis->moveTo(cmdPtr->pos);
         if(!cmdPtr->axis)
         {
             if(doCount) {cmdPtr = program; doCount--;}
@@ -259,6 +316,7 @@ void runCmd()
     Command * s = cmdSrc, * d = cmdDst;
     if(d != s) // или из очереди
     {
+        Command bf[16], * bp = bf;
         do
         {
             Command * t = s++;
@@ -266,8 +324,10 @@ void runCmd()
             if(t->axis == nextCmd) 
                 break;
             else
-                t->axis->moveTo(t->pos);
+                *(bp++) = *t;////t->axis->moveTo(t->pos);
         } while(d != s);
+        bp->axis = 0;
+        moveTo(bf);
         cmdSrc = s;
     }
 }

@@ -19,6 +19,12 @@ struct RXYZ
     float R, X, Y, Z;
 };
 
+struct ABC
+{
+    float A, B, C;
+};
+
+bool RZtoBC(ABC * abc, float R, float Z, float D);
 void RZpos(RXYZ * d);
 void RXYZpos(RXYZ * d);
 void RZref(RXYZ * d);

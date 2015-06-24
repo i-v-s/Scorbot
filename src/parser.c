@@ -5,6 +5,7 @@
 #include "host_io.h"
 #include <stdint.h>
 #include "controller.h"
+#include "kinematics.h"
 // PTP A4 B5 
 
 char text[12], * tp = text;
@@ -93,7 +94,7 @@ const char * save(const char * cmd)
 {
     Command * dp = dstPtr;
     if(dstPtr == program)
-        for(int x = 0; x < sizeof(axes) / sizeof(Axis); x++) // Пишем всё
+        for(int x = 0; x < 7; x++) // Пишем всё
         {
             Axis * a = axes + x;
             dstPtr->axis = a;
@@ -103,7 +104,7 @@ const char * save(const char * cmd)
             dstPtr++;
         }
     else
-        for(int x = 0; x < sizeof(axes) / sizeof(Axis); x++) // Пишем отличия
+        for(int x = 0; x < 7; x++) // Пишем отличия
         {
             Axis * a = axes + x;
             if(a == axisF && axisH->getPos()) continue;
@@ -229,12 +230,16 @@ const char * put(const char * cmd)
 const char * pos(const char * cmd)
 {
     out.log("\nPos:");
-    char buf[12];
-    for(char x = 0; x < sizeof(axes) / sizeof(Axis); x++)
+    char buf[64];
+    for(char x = 0; x < 7; x++)
     {
-        sprintf(buf, " %c%.2f", axisNames[x] + ('A' - 'a'), axes[x].getPos());
+        sprintf(buf, " %c%.1f", axisNames[x] + ('A' - 'a'), axes[x].getPos());
         out.log(buf);
     }
+    RXYZ pos;
+    RXYZpos(&pos);
+    sprintf(buf, " R%.1f X%.1f Y%.1f Z%.1f", pos.R, pos.X, pos.Y, pos.Z);
+    out.log(buf);
     return 0;
 }
 

@@ -35,7 +35,7 @@ extern Command * cmdPtr;
 extern int doCount;
 
 extern Motor motors[6];
-extern Axis axes[7];
+extern Axis axes[11];
 extern const char axisNames[];
 extern volatile int ticks;
 
@@ -46,6 +46,10 @@ extern volatile int ticks;
 #define axisE (axes + 4)
 #define axisF (axes + 5)
 #define axisH (axes + 6)
+#define axisR (axes + 7)
+#define axisX (axes + 8)
+#define axisY (axes + 9)
+#define axisZ (axes + 10)
 #define nextCmd ((Axis *) 1)
 
 int getMotorPos(Motor * motor);
@@ -67,5 +71,5 @@ void motorsOn(void);
 
 void ctlLoop();
 char zero(char noZero);
-char pushCommand(Command * cmd);
+bool pushCommand(Command * cmd);
 void allStop();
