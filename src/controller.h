@@ -60,7 +60,7 @@ void setMotorPos(Motor * motor, int pos);
 #ifdef __cplusplus
  extern "C" {
 #endif
-void addTickHandler(void (* h) ());
+void addTickHandler(void (* h) (void * obj), void * obj = 0);
 #ifdef __cplusplus
  }
 #endif

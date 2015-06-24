@@ -107,8 +107,12 @@ void setMotorPos(Motor * motor, int pos)
     else motor->pos = pos;
 }
 
-typedef void (* TickHandler) ();
-TickHandler tickHandlers[8], * thDst = tickHandlers;
+
+struct TickHandler
+{ 
+    void (* method) (void * obj);
+    void * obj;
+} tickHandlers[8], * thDst = tickHandlers;
 
 #ifdef __cplusplus
  extern "C" {
@@ -124,9 +128,10 @@ void SysTick_Handler(void)
         m->oldPos = pos;
         int rate = m->rate;
         m->rate = rate - ((rate - d * SysTickFreq) >> 3);
-    }   
-    GPIOE->ODR = 0x4F00 & ~GPIOD->IDR;
-    for(TickHandler * x = tickHandlers; x < thDst; x++) (*x)();
+    }
+    int sw = 0x4F00 & ~GPIOD->IDR;
+    GPIOE->BSRR = sw | 0x4F000000;
+    for(TickHandler * x = tickHandlers; x < thDst; x++) x->method(x->obj);
 }
 
 #ifdef __cplusplus
@@ -134,9 +139,11 @@ void SysTick_Handler(void)
 #endif
 
 
-void addTickHandler(void (* h) ())
+void addTickHandler(void (* h) (void * obj), void * obj)
 {
-    *(thDst++) = h;
+    thDst->method = h;
+    thDst->obj = obj;
+    thDst++;
 }
 
 void moveMotor(Motor * motor, int ref)
