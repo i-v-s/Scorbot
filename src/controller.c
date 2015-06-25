@@ -310,6 +310,7 @@ void runCmd()
     if(cmdPtr)  // из программы
     {
         if(cmdPtr->axis == nextCmd) cmdPtr++;
+        GPIOB->BSRR = 1 << 15; // Включаем сигнал выполнения
         cmdPtr = moveTo(cmdPtr);
         //for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
             //cmdPtr->axis->moveTo(cmdPtr->pos);
@@ -320,6 +321,7 @@ void runCmd()
         }
         return;
     }
+    GPIOB->BRR = 1 << 15; // Выключаем сигнал выполнения
     Command * s = cmdSrc, * d = cmdDst;
     if(d != s) // или из очереди
     {
