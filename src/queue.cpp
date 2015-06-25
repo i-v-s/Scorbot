@@ -2,6 +2,68 @@
 #include "hw_config.h"
 
 ////// “естирование на устойчивость к прерывани€м /////////////////////////////////////////
+#ifdef _TEST_
+#include "test.h"
+
+class TestQueue: public Test
+{
+public:
+    TestQueue(): Test("Queue"){};
+} testQueue;
+
+beginTest(Basic)
+{
+    Queue<char, 32> q;
+    if(q.last()) return "last error";
+    q.log("abc");
+    const char * last = q.last();
+    if(!last || *last != 'a') return "last error";
+    q.push('B');
+    char * t = "cbx";
+    q.push(t, t + strlen(t));
+    char buf[20];
+    int x;
+    for(x = 0; x < 20; x++)
+    {
+        char d;
+        if(!q.pop(&d)) { buf[x] = 0; break;}
+        buf[x] = d;
+    }
+    if(x == 20) return "pop error";
+    if(strcmp(buf, "abcBcbx")) return "failed";
+    
+    return 0;
+}
+endTest(Basic, testQueue);
+
+beginTest(Chain)
+{
+    Queue<char, 64> a;
+    a.output.set(&a.input, &a);
+    a.source = &a;
+    a.log("123");
+    char buf[20];
+    if(a.pull(buf, 20) != 3) return "selfchain error";
+    buf[3] = 0;
+    if(strcmp(buf, "123")) return "selfchain error";
+    if(a.length()) return "length error";
+
+    Queue<char, 8> b;
+    a.output.set(&b.input, &b);
+    b.source = &a;
+    a.log("0123456789");
+    int t = b.pull(buf, 20);
+    t += b.pull(buf + t, 20 - t);
+    buf[t] = 0;
+    if(strcmp(buf, "0123456789")) return "chain error";
+    
+    
+    return 0;
+    
+    
+}
+endTest(Chain, testQueue);
+
 
 class CircularTest: private Queue<char, 256>
 {
@@ -101,3 +163,5 @@ const char * testOut()
 {
     return ctest.run();
 }
+
+#endif

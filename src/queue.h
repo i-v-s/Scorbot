@@ -3,6 +3,7 @@
 
 #include <string.h>
 #include <intrinsics.h>
+#include <assert.h>
 
 template<typename T> struct Receiver
 {
@@ -36,8 +37,7 @@ public:
     Queue(): src(data), dst(data), newDst(data), output(0), pullWork(false), source(0) {};
     virtual void pull()
     {
-        if(!output.method) return;
-        if(pullWork) return;
+        if(!output.method || pullWork) return;
         pullWork = true;
         
         T * s = src, * d = dst;
@@ -56,10 +56,40 @@ public:
         }
         else
             s = output(s, end);
-        // TODO поставить ассерт, что s в рамках
+        assert(s >= data && s <= end && s < data + SIZE);
         src = s;
-        pullWork = false;
         if(source) source->pull();
+        pullWork = false;
+    }
+    int pull(T * dest, int size)
+    {
+        if(pullWork) return 0;
+        pullWork = true;
+        
+        T * s = src, * d = dst;
+        int count = (d - s) & (SIZE - 1); // Сколько всего надо отправить
+        if(size > count) size = count;
+        if(!size)
+        {
+            pullWork = false;
+            return 0;
+        }
+        T * end = s + size;
+        if(end >= data + SIZE)
+        {
+            int t = data + SIZE - s;
+            memcpy(dest, s, t);
+            end -= SIZE;
+            dest += t;
+            memcpy(dest, data, end - data);
+        }
+        else
+            memcpy(dest, s, end - s);
+        //assert(s >= data && s <= end && s < data + SIZE);
+        src = end;
+        if(source) source->pull();
+        pullWork = false;
+        return size;
     }
     const T * push(const T * text, const T * end)
     {
@@ -114,7 +144,6 @@ public:
     {
         Queue<T, SIZE> * q = (Queue<T, SIZE> *) obj;
         return q->push(start, end);
-        
     }
     inline int log(const T * text)
     {
