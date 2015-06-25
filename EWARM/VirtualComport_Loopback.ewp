@@ -6674,7 +6674,6 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_cl.s</name>
         <excluded>
           <configuration>STM3210E-EVAL</configuration>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
           <configuration>STM32373C_EVAL</configuration>
           <configuration>STM32303C_EVAL</configuration>
@@ -6684,7 +6683,6 @@
       <file>
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_hd.s</name>
         <excluded>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
         </excluded>
       </file>
@@ -6692,7 +6690,6 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_ld.s</name>
         <excluded>
           <configuration>STM3210E-EVAL</configuration>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
           <configuration>STM32373C_EVAL</configuration>
           <configuration>STM32303C_EVAL</configuration>
@@ -6703,7 +6700,6 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_ld_vl.s</name>
         <excluded>
           <configuration>STM3210E-EVAL</configuration>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
           <configuration>STM32373C_EVAL</configuration>
           <configuration>STM32303C_EVAL</configuration>
@@ -6724,7 +6720,6 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_md_vl.s</name>
         <excluded>
           <configuration>STM3210E-EVAL</configuration>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
           <configuration>STM32373C_EVAL</configuration>
           <configuration>STM32303C_EVAL</configuration>
@@ -6735,7 +6730,6 @@
         <name>$PROJ_DIR$\..\..\..\Libraries\CMSIS\Device\ST\STM32F10x\Source\Templates\iar\startup_stm32f10x_xl.s</name>
         <excluded>
           <configuration>STM3210E-EVAL</configuration>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM32373C_EVAL</configuration>
           <configuration>STM32303C_EVAL</configuration>
           <configuration>STM32F303C TEST</configuration>
@@ -6766,7 +6760,6 @@
       <name>STM3210C_EVAL</name>
       <excluded>
         <configuration>STM3210E-EVAL</configuration>
-        <configuration>STM3210B-EVAL</configuration>
         <configuration>STM3210E-EVAL_XL</configuration>
         <configuration>STM32373C_EVAL</configuration>
         <configuration>STM32303C_EVAL</configuration>
@@ -6778,7 +6771,6 @@
       <file>
         <name>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\STM3210C_EVAL\stm3210c_eval_ioe.c</name>
         <excluded>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
           <configuration>STM32L152-EVAL</configuration>
           <configuration>STM32L152D-EVAL</configuration>
@@ -6787,9 +6779,6 @@
     </group>
     <group>
       <name>STM3210E_EVAL</name>
-      <excluded>
-        <configuration>STM3210B-EVAL</configuration>
-      </excluded>
       <file>
         <name>$PROJ_DIR$\..\..\..\Utilities\STM32_EVAL\STM3210E_EVAL\stm3210e_eval.c</name>
       </file>
@@ -6829,7 +6818,6 @@
     <name>STM32F30X</name>
     <excluded>
       <configuration>STM3210E-EVAL</configuration>
-      <configuration>STM3210B-EVAL</configuration>
       <configuration>STM3210E-EVAL_XL</configuration>
       <configuration>STM32L152-EVAL</configuration>
       <configuration>STM32L152D-EVAL</configuration>
@@ -6885,7 +6873,6 @@
     <name>STM32F37X</name>
     <excluded>
       <configuration>STM3210E-EVAL</configuration>
-      <configuration>STM3210B-EVAL</configuration>
       <configuration>STM3210E-EVAL_XL</configuration>
       <configuration>STM32L152-EVAL</configuration>
       <configuration>STM32L152D-EVAL</configuration>
@@ -6951,7 +6938,6 @@
     <name>STM32L1xx</name>
     <excluded>
       <configuration>STM3210E-EVAL</configuration>
-      <configuration>STM3210B-EVAL</configuration>
       <configuration>STM3210E-EVAL_XL</configuration>
       <configuration>STM32373C_EVAL</configuration>
       <configuration>STM32303C_EVAL</configuration>
@@ -6981,7 +6967,6 @@
       <file>
         <name>$PROJ_DIR$\..\src\system_stm32l1xx.c</name>
         <excluded>
-          <configuration>STM3210B-EVAL</configuration>
           <configuration>STM3210E-EVAL_XL</configuration>
         </excluded>
       </file>
@@ -7007,7 +6992,6 @@
     <group>
       <name>STM32L1xx_StdPeriph_Driver</name>
       <excluded>
-        <configuration>STM3210B-EVAL</configuration>
         <configuration>STM3210E-EVAL_XL</configuration>
       </excluded>
       <file>
@@ -7106,6 +7090,12 @@
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\stm32_it.c</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\test.cpp</name>
+    </file>
+    <file>
+      <name>$PROJ_DIR$\..\src\test.h</name>
     </file>
     <file>
       <name>$PROJ_DIR$\..\src\uart.cpp</name>
