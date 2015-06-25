@@ -60,7 +60,7 @@ bool XYZtoABC(ABC * abc, float X, float Y, float Z, float D)
     return true;
 }
 
-////////////////////////////////////////////////////////////////////////////////
+// Получить положение
 
 void RZpos(RXYZ * d)
 {
@@ -88,6 +88,8 @@ void RXYZref(RXYZ * d)
     d->Y = d->R * sin(A);
 }
 
+// Переместить
+
 bool RZmoveTo(float R, float Z)
 {
     ABC abc;
@@ -107,110 +109,92 @@ bool XYZmoveTo(float X, float Y, float Z)
     return true;
 }
 
-bool testRZmoveTo()
-{
-    out.log("RZmoveTo ");
-    for(float D = -90; D < 90; D += 20.0)
-    for(float B = -50; B < 120; B += 10.0)
-    for(float C = B - 90; C < B + 90; C += 10.0)
-    {
-        axisB->moveTo(B);
-        axisC->moveTo(C);
-        axisD->moveTo(D);
-        RXYZ d;
-        RZref(&d);
-        RZmoveTo(d.R, d.Z);
-        float br = axisB->getRef();
-        float cr = axisC->getRef();
-        if(fabs(br - B) > 0.1) 
-        { 
-            out.log("B mismatch"); 
-            return false;
-        }
-        if(fabs(cr - C) > 0.1) 
-        { 
-            out.log("C mismatch"); 
-            return false;
-        }
-    }    
-    return true;
-}
+// Тесты
+#ifdef _TEST_
+#include "test.h"
 
-bool testXYZtoABC()
+class TestKinematics: public Test
 {
-    out.log("XYZtoABC ");
-    for(float D =  -30; D < 190; D += 20.0)
-    {
-        axisD->moveTo(D);
+public:
+    TestKinematics(): Test("Kinematics"){};
+} testKinematics;
 
-        for(float X = -400; X < 400; X += 70.0)
-        for(float Y = -400; Y < 400; Y += 70.0)
-        for(float Z = -400; Z < 400; Z += 70.0)
+class TestRZmoveTo: public Test
+{
+    virtual const char * exec()
+    {
+        for(float D = -90; D < 90; D += 20.0)
+        for(float B = -50; B < 120; B += 10.0)
+        for(float C = B - 90; C < B + 90; C += 10.0)
         {
-            ABC abc;
+            axisB->moveTo(B);
+            axisC->moveTo(C);
+            axisD->moveTo(D);
             RXYZ d;
-            if(!XYZtoABC(&abc, X, Y, Z, D * PI180)) continue;
-            ABCDtoRXYZ(&d, abc.A, abc.B, abc.C, D);
-            if(fabs(X - d.X) > 0.5)
-            {
-                out.log("X mismatch"); 
-                return false;
-            }
-            if(fabs(Y - d.Y) > 0.5)
-            {
-                out.log("Y mismatch"); 
-                return false;
-            }        
-            if(fabs(Z - d.Z) > 0.5)
-            {
-                out.log("Z mismatch"); 
-                return false;
-            }        
-        }
+            RZref(&d);
+            RZmoveTo(d.R, d.Z);
+            float br = axisB->getRef();
+            float cr = axisC->getRef();
+            if(fabs(br - B) > 0.1) return "B mismatch";
+            if(fabs(cr - C) > 0.1) return "C mismatch";
+        }    
+        return 0;
     }
-    return true;
-}
+public:
+    TestRZmoveTo(): Test("RZmoveTo", &testKinematics){};
+} testRZmoveTo;
 
-bool testXYZmoveTo()
+class TestXYZtoABC: public Test
 {
-    out.log("XYZmoveTo ");
-    for(float D =  180; D < 190; D += 10.0)
+    virtual const char * exec()
     {
-        axisD->moveTo(D);
-
-        for(float X = -400; X < 400; X += 50.0)
-        for(float Y = -400; Y < 400; Y += 50.0)
-        for(float Z = -400; Z < 400; Z += 50.0)
+        for(float D =  -30; D < 190; D += 20.0)
         {
-            if(!XYZmoveTo(X, Y, Z)) continue;
-            RXYZ d;
-            RXYZref(&d);
-            if(fabs(X - d.X) > 0.5)
-            {
-                out.log("X mismatch"); 
-                return false;
-            }
-            if(fabs(Y - d.Y) > 0.5)
-            {
-                out.log("Y mismatch"); 
-                return false;
-            }        
-            if(fabs(Z - d.Z) > 0.5)
-            {
-                out.log("Z mismatch"); 
-                return false;
-            }        
-        }
-    }
-    return true;
-}
+            axisD->moveTo(D);
 
-void testKinematics()
+            for(float X = -400; X < 400; X += 70.0)
+            for(float Y = -400; Y < 400; Y += 70.0)
+            for(float Z = -400; Z < 400; Z += 70.0)
+            {
+                ABC abc;
+                RXYZ d;
+                if(!XYZtoABC(&abc, X, Y, Z, D * PI180)) continue;
+                ABCDtoRXYZ(&d, abc.A, abc.B, abc.C, D);
+                if(fabs(X - d.X) > 0.5) return "X mismatch";
+                if(fabs(Y - d.Y) > 0.5) return "Y mismatch";
+                if(fabs(Z - d.Z) > 0.5) return "Z mismatch";
+            }
+        }
+        return 0;
+    }
+public:
+    TestXYZtoABC(): Test("XYZtoABC", &testKinematics){};
+} testXYZtoABC;
+
+class TestXYZmoveTo: public Test
 {
-    out.log("\nKinematics test: ");
-    testXYZtoABC();
-    testRZmoveTo();
-    testXYZmoveTo();
-    
-    out.log("ok ");
-}
+    virtual const char * exec()
+    {
+        for(float D =  180; D < 190; D += 10.0)
+        {
+            axisD->moveTo(D);
+
+            for(float X = -400; X < 400; X += 50.0)
+            for(float Y = -400; Y < 400; Y += 50.0)
+            for(float Z = -400; Z < 400; Z += 50.0)
+            {
+                if(!XYZmoveTo(X, Y, Z)) continue;
+                RXYZ d;
+                RXYZref(&d);
+                if(fabs(X - d.X) > 0.5) return "X mismatch";
+                if(fabs(Y - d.Y) > 0.5) return "Y mismatch";
+                if(fabs(Z - d.Z) > 0.5) return "Z mismatch";
+            }
+        }
+        return 0;
+    }
+public:
+    TestXYZmoveTo(): Test("XYZmoveTo", &testKinematics){};
+} testXYZmoveTo;
+
+#endif

@@ -124,3 +124,33 @@ void USART1_IRQHandler() // Прошло достаточное время с последнего приёма
 #ifdef __cplusplus
 }
 #endif
+
+#ifdef _TEST_
+#include "test.h"
+
+class TestUART: public Test
+{
+public:
+    TestUART(): Test("UART"){};
+} testUART;
+
+beginTest(Transmit)
+{
+    UART uart;
+    USART_TypeDef USART;
+    DMA_TypeDef DMA; 
+    DMA_Channel_TypeDef DMA_RX, DMA_TX;
+        
+    uart.uartInit(&USART, &DMA, &DMA_RX, &DMA_TX);
+    char buf[20];
+    uart.tx.log("abcde");
+    char * t = (char *)DMA_TX.CMAR;
+    memcpy(buf, t, DMA_TX.CNDTR);
+    buf[DMA_TX.CNDTR] = 0;
+    if(strcmp(buf, "abcde")) return "error";
+    
+    return 0;
+}
+endTest(Transmit, testUART);
+
+#endif

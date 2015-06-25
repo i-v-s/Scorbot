@@ -26,6 +26,8 @@
 #include "wireless.h"
 #include "controller.h"
 #include "kinematics.h"
+#include "test.h"
+#include <stdio.h>
 
 uint8_t noZero = 0x3F;
 
@@ -51,23 +53,20 @@ void delay_d(void);
 void Enc_prg(void);//аппаратный энкодер #6
 /* Private functions ---------------------------------------------------------*/
 
-void test()
-{
-    testKinematics();
-    while(1);
-}
-
 int main(void)
 {
-#ifdef _TEST_
-    test();
-#endif    
-    char enOut = 0;
+    //char enOut = 0;
     Set_System();
     //Set_USBClock();
     //USB_Interrupts_Config();
     //USB_Init();
     mx_pinout_config();
+#ifdef _TEST_
+    Test::run();
+    while(1);
+#endif    
+
+    
     esp.uartInit(USART1, DMA1, DMA1_Channel5, DMA1_Channel4);
     initESP();
     

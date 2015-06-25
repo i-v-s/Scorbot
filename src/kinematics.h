@@ -32,5 +32,3 @@ void RXYZref(RXYZ * d);
 
 bool RZmoveTo(float R, float Z);
 bool XYZmoveTo(float X, float Y, float Z);
-
-void testKinematics();
