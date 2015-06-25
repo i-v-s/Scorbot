@@ -114,6 +114,12 @@ struct TickHandler
     void * obj;
 } tickHandlers[8], * thDst = tickHandlers;
 
+int inStart = 0, inHalt = 0;
+
+Command program[64] = {0};
+Command * volatile cmdPtr = 0;
+int doCount = 0;
+
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -129,6 +135,25 @@ void SysTick_Handler(void)
         int rate = m->rate;
         m->rate = rate - ((rate - d * SysTickFreq) >> 3);
     }
+    if(GPIOB->IDR & (1 << 14) && !cmdPtr)
+    {
+        inStart++;
+        if(inStart >= 5)
+        {
+            cmdPtr = program;
+            inStart = 0;
+        }
+    }
+    if(GPIOB->IDR & (1 << 12) && cmdPtr)
+    {
+        inHalt++;
+        if(inHalt >= 5)
+        {
+            allStop();
+            inHalt = 0;            
+        }
+    }
+    
     int sw = 0x4F00 & ~GPIOD->IDR;
     GPIOE->BSRR = sw | 0x4F000000;
     for(TickHandler * x = tickHandlers; x < thDst; x++) x->method(x->obj);
@@ -164,10 +189,6 @@ void motorsOn(void)
 {
     motorsEnabled = 1;
 }
-
-Command program[64] = {0};
-Command * cmdPtr = 0;
-int doCount = 0;
 
 #define timeOut 100
 
@@ -307,18 +328,17 @@ Command * moveTo(Command * c)
 
 void runCmd() 
 {               // Читаем команду
-    if(cmdPtr)  // из программы
+    if(Command * cp = cmdPtr)  // из программы
     {
-        if(cmdPtr->axis == nextCmd) cmdPtr++;
+        if(cp->axis == nextCmd) cp++;
         GPIOB->BSRR = 1 << 15; // Включаем сигнал выполнения
-        cmdPtr = moveTo(cmdPtr);
-        //for( ; cmdPtr->axis && cmdPtr->axis != nextCmd; cmdPtr++)
-            //cmdPtr->axis->moveTo(cmdPtr->pos);
-        if(!cmdPtr->axis)
+        cp = moveTo(cp);
+        if(!cp->axis)
         {
-            if(doCount) {cmdPtr = program; doCount--;}
-            else cmdPtr = 0;
+            if(doCount) {cp = program; doCount--;}
+            else cp = 0;
         }
+        cmdPtr = cp;
         return;
     }
     GPIOB->BRR = 1 << 15; // Выключаем сигнал выполнения
@@ -333,7 +353,7 @@ void runCmd()
             if(t->axis == nextCmd) 
                 break;
             else
-                *(bp++) = *t;////t->axis->moveTo(t->pos);
+                *(bp++) = *t;
         } while(d != s);
         bp->axis = 0;
         moveTo(bf);

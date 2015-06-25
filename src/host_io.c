@@ -8,7 +8,15 @@
 
 Out out;
 
+extern "C" {
 
+size_t __write(int Handle, const unsigned char *Buf, size_t Bufsize)
+{
+    //stdout
+    return out.push((const char *) Buf, (const char *) (Buf + Bufsize)) - (const char *)Buf;
+}
+
+}
 
 extern volatile uint32_t packet_sent;
 

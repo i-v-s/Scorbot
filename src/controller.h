@@ -31,7 +31,7 @@ typedef struct
 } Command;
 
 extern Command program[64];
-extern Command * cmdPtr;
+extern Command * volatile cmdPtr;
 extern int doCount;
 
 extern Motor motors[6];
