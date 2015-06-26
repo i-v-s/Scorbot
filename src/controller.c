@@ -4,6 +4,7 @@
 #include "hw_config.h"
 #include <string.h>
 #include "kinematics.h"
+#include "parser.h"
 
 volatile int ticks = 0;
 
@@ -140,6 +141,7 @@ void SysTick_Handler(void)
         inStart++;
         if(inStart >= 5)
         {
+            if(!program->axis) load(0);
             cmdPtr = program;
             inStart = 0;
         }
