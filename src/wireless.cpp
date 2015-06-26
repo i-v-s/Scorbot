@@ -47,6 +47,8 @@ void ESP::tickHandler(void * obj)
     else pwmct--;    
 }
 
+//Queue<char, 1024> debug;
+
 char * ESP::parseRX(void * obj, char * text, char * end)
 {
     ESP * esp = (ESP *) obj;
@@ -76,8 +78,12 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 if(dst > val) 
                 {
                     *dst = 0;
-                    if(!strcmp(val, "OK")) ledoff = 20;
-                       
+                    if(!strcmp(val, "OK"))
+                    {
+                        esp->busy = false;
+                        ledoff = 20;
+                    }
+                    //debug.log(val);
                     if(esp->expectResult && !strcmp(val, esp->expectResult))
                     {
                         esp->expectResult = 0; 
@@ -135,15 +141,30 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 {
                     esp->connects |= mask;
                     esp->ready &= ~mask;
+
+                    /*char buf[64];
+                    sprintf(buf, "CONNECT(r:%d)", esp->ready);
+                    debug.log(buf);*/
+
+                    out.output.set(esp->send, esp);
+                    esp->tx.source = &out;
+                    out.pull();
+
                     pwmval = 20;
                     pwmdst = 20;
                 }
                 else if(!strcmp(val, "CLOSED")) 
                 {
                     esp->ready &= esp->connects &= ~mask;
-                    if(!esp->ready)
+    
+                    /*char buf[64];
+                    sprintf(buf, "CLOSED(r:%d)", esp->ready);
+                    debug.log(buf);*/
+    
+                    if(!esp->connects)
                     {
                         out.output.set(0);
+                        esp->tx.source = 0;
                         pwmdst = 0;
                     }
                 }
@@ -176,15 +197,7 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 if(!size)
                 {
                     state = 0;
-                    //esp->tx.log("AT+CIPSEND=0,50\r\n");
-                    //esp->tx.log("AT+CIPSEND=0,5\r\n");
-                    if(!(esp->ready & mask))
-                    {
-                        esp->ready |= mask;
-                        out.output.set(esp->send, esp);
-                        out.pull();
-                    }
-                    
+                    esp->ready |= mask;
                 }
             }
             break;
@@ -194,10 +207,6 @@ char * ESP::parseRX(void * obj, char * text, char * end)
                 {
                     esp->busy = false;
                     out.pull();
-                    //out.output.set(esp->tx.input, esp);
-                    //esp->tx.source = &out;
-                    //out.log("+++");
-                    //out.pull();
                 }
                 state = 0;
             }
@@ -209,18 +218,23 @@ char * ESP::parseRX(void * obj, char * text, char * end)
 const char * ESP::send(void * obj, const char * data, const char * end)
 {
     ESP * esp = (ESP *)obj;
-    if(esp->busy || !esp->ready) return data;
+
+    /*char buf[16];
+    sprintf(buf, (esp->busy ? "i:%d " : "b:%d "), end - data);
+    debug.log(buf);*/
+    
+    if(esp->busy || !esp->connects) return data;
     int len = esp->sendSize;
     if(!len)
     {
         len = out.length();
-        int m = esp->ready;
+        int m = esp->connects;
         int id = 0;
         while(m && !(m & 1)) { m >>= 1; id++;}
-        //if(len > 5) len = 5;
         
         char buf[20];
         int l = sprintf(buf, "AT+CIPSEND=%d,%d\r\n", id, len);
+        //debug.log(buf);
         esp->sendSize = len;
         esp->busy = true;
         esp->tx.push(buf, buf + l);
@@ -229,6 +243,10 @@ const char * ESP::send(void * obj, const char * data, const char * end)
     
     if(end > data + len) end = data + len;
     const char * result = esp->tx.push(data, end);
+    
+    /*sprintf(buf, "sent:%d ", result - data);
+    debug.log(buf);*/
+    
     esp->sendSize = len - (result - data);
     esp->busy = !esp->sendSize;
     return result;

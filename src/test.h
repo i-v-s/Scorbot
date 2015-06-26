@@ -7,6 +7,8 @@ private:
     Test * children, * next;
 protected:
     virtual const char * exec() { return 0;};
+    virtual void onTick() {};
+    static void setTimer(int time);
 public:
     Test(const char * name, Test * parent = 0);
     static void run();

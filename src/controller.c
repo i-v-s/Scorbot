@@ -121,6 +121,7 @@ Command program[64] = {0};
 Command * volatile cmdPtr = 0;
 int doCount = 0;
 
+#ifndef _TEST_
 #ifdef __cplusplus
  extern "C" {
 #endif
@@ -164,7 +165,7 @@ void SysTick_Handler(void)
 #ifdef __cplusplus
  }
 #endif
-
+#endif
 
 void addTickHandler(void (* h) (void * obj), void * obj)
 {

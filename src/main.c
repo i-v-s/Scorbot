@@ -64,13 +64,12 @@ int main(void)
 #ifdef _TEST_
     Test::run();
     while(1);
-#endif    
-
+#endif
     
     esp.uartInit(USART1, DMA1, DMA1_Channel5, DMA1_Channel4);
     initESP();
     
-    out.log("Scorbot firmware 0.1 ");
+    out.log("Scorbot firmware 0.1 "__DATE__);
     while(1)
     {
 		if(noZero)
