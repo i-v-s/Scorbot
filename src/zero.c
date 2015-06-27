@@ -96,7 +96,7 @@ char zeroB()
             setMotorPos(motors + 2, 500);
             motors[2].reverse();
             out.log("B<> C<< ");
-            while(getMotorPos(motors + 2) > 0);
+            while(motors[2].getPos() > 0);
             motors[1].forward();
             out.log("B>> ");
             to = ticks + 30;
@@ -149,7 +149,7 @@ char zeroD()
     initFwd();
     while(1)
     {
-        int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+        int p = motors[3].getPos() + motors[4].getPos();
         traceFwd(p, 100, 1);
         if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) { out.log("D! "); break;}
     }
@@ -159,11 +159,11 @@ char zeroD()
     out.log("D<< ");
     motors[3].reverse();
     motors[4].reverse();
-    initRvs(getMotorPos(motors + 3) + getMotorPos(motors + 4));
+    initRvs(motors[3].getPos() + motors[4].getPos());
     to = ticks + 20;
     while(1)
     {
-        int p = getMotorPos(motors + 3) + getMotorPos(motors + 4);
+        int p = motors[3].getPos() + motors[4].getPos();
         traceRvs(p, 1);
         if((abs(motors[3].rate) < 20 || abs(motors[4].rate) < 20) && ticks > to) 
         {motors[3].stop(); motors[4].stop(); out.log("D! fail "); return 0;}
@@ -172,8 +172,8 @@ char zeroD()
     motors[4].stop();
     while(abs(motors[3].rate) > 20 || abs(motors[4].rate) > 20);
 
-    setMotorPos(motors + 3, getMotorPos(motors + 3) - (cp >> 1));
-    setMotorPos(motors + 4, getMotorPos(motors + 4) - (cp >> 1));
+    setMotorPos(motors + 3, motors[3].getPos() - (cp >> 1));
+    setMotorPos(motors + 4, motors[4].getPos() - (cp >> 1));
     
     out.log("Dok "); return 1;
 }
@@ -184,11 +184,11 @@ char zeroE()
     motors[4].reverse();
     motors[3].forward();
     initFwd();
-    int strt = getMotorPos(motors + 3) - getMotorPos(motors + 4);
+    int strt = motors[3].getPos() - motors[4].getPos();
     int to = ticks + 20;
     while(1)
     {
-        int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
+        int a = motors[3].getPos(), b = motors[4].getPos(), p = a - b;
         if(abs(p - strt) >= 6000)
         {
             motors[3].stop();
@@ -210,11 +210,11 @@ char zeroE()
     out.log("E<< ");
     motors[4].forward();
     motors[3].reverse();
-    strt = getMotorPos(motors + 3) - getMotorPos(motors + 4);
+    strt = motors[3].getPos() - motors[4].getPos();
     initRvs(strt);
     while(1)
     {
-        int a = getMotorPos(motors + 3), b = getMotorPos(motors + 4), p = a - b;
+        int a = motors[3].getPos(), b = motors[4].getPos(), p = a - b;
         traceRvs(p, 0x40);
         if(abs(strt - p) >= 3000)
         {
@@ -230,7 +230,7 @@ char zeroE()
     
     motors[3].stop();
     motors[4].stop();
-    int d = (getMotorPos(motors + 3) + getMotorPos(motors + 4)) >> 1;
+    int d = (motors[3].getPos() + motors[4].getPos()) >> 1;
     setMotorPos(motors + 3, d);
     setMotorPos(motors + 4, d);
     

@@ -2,16 +2,20 @@
 
 typedef struct
 {
-    TIM_TypeDef * timer;
-    int prec; // Допуск позиционирования
+//private:
     volatile int pos; // Текущая позиция (если не в timer)
+    TIM_TypeDef * timer;
+//public:
+    int prec; // Допуск позиционирования
     int ref; // Заданная позиция
-    int time;
+    int time, state;
     volatile int rate; // Скорость
     int oldPos; // Предыдущая позиция
     void (* forward)();
     void (* reverse)();
     void (* stop)();
+    int control();
+    inline int getPos() { return timer ? (int16_t)timer->CNT : pos;}
 } Motor;
 
 typedef struct
@@ -52,7 +56,6 @@ extern volatile int ticks;
 #define axisZ (axes + 10)
 #define nextCmd ((Axis *) 1)
 
-int getMotorPos(Motor * motor);
 void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
 void setMotorPos(Motor * motor, int pos);

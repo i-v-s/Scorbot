@@ -1,5 +1,6 @@
 #include "controller.h"
 #include <stdlib.h>
+#include <stdio.h>
 #include "host_io.h"
 #include "hw_config.h"
 #include <string.h>
@@ -10,12 +11,12 @@ volatile int ticks = 0;
 
 Motor motors[6] = {0};
 
-float Apos() { return (getMotorPos(motors + 0) - axisA->zero) / axisA->scale;}
-float Bpos() { return (-getMotorPos(motors + 1) - axisB->zero) / axisB->scale;}
-float Cpos() { return (getMotorPos(motors + 2) - axisC->zero) / axisC->scale;}
-float Dpos() { return (getMotorPos(motors + 3) + getMotorPos(motors + 4) - axisD->zero) / axisD->scale;}
-float Epos() { return (getMotorPos(motors + 3) - getMotorPos(motors + 4) - axisE->zero) / axisD->scale;}
-float Fpos() { return (getMotorPos(motors + 5) - axisF->zero) / axisF->scale;}
+float Apos() { return (motors[0].getPos() - axisA->zero) / axisA->scale;}
+float Bpos() { return (-motors[1].getPos() - axisB->zero) / axisB->scale;}
+float Cpos() { return (motors[2].getPos() - axisC->zero) / axisC->scale;}
+float Dpos() { return (motors[3].getPos() + motors[4].getPos() - axisD->zero) / axisD->scale;}
+float Epos() { return (motors[3].getPos() - motors[4].getPos() - axisE->zero) / axisD->scale;}
+float Fpos() { return (motors[5].getPos() - axisF->zero) / axisF->scale;}
 
 float Aref() { return (motors[0].ref - axisA->zero) / axisA->scale;}
 float Bref() { return (-motors[1].ref - axisB->zero) / axisB->scale;}
@@ -94,13 +95,6 @@ void initMotor(Motor * m, void (* forward)(), void (* reverse)(), void (* stop)(
     m->prec = 2;
 }
 
-int getMotorPos(Motor * motor)
-{
-    TIM_TypeDef * tim = motor->timer;
-    if(tim) return (int16_t)tim->CNT;
-    return motor->pos;
-}
-
 void setMotorPos(Motor * motor, int pos)
 {
     TIM_TypeDef * tim = motor->timer;
@@ -120,6 +114,7 @@ int inStart = 0, inHalt = 0;
 Command program[64] = {0};
 Command * volatile cmdPtr = 0;
 int doCount = 0;
+int delay = 0;
 
 #ifndef _TEST_
 #ifdef __cplusplus
@@ -131,7 +126,7 @@ void SysTick_Handler(void)
     ticks++;
     for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor); m++)
     {
-        int pos = getMotorPos(m);
+        int pos = m->getPos();
         int d = pos - m->oldPos;
         m->oldPos = pos;
         int rate = m->rate;
@@ -195,25 +190,40 @@ void motorsOn(void)
 
 #define timeOut 100
 
-int ctlMotor(Motor * m)
+void onBlock(Motor * m)
 {
-    int d = m->ref - getMotorPos(m);
-    if(d > m->prec) 
+    char buf[32];
+    sprintf(buf, "\nCan not to move %d ", m - motors);
+    out.log(buf);
+    int pos = m->getPos(), ref = (pos < m->ref) ? (pos - 50) : (pos + 50);
+    allStop();
+    m->ref = ref;
+}
+
+int Motor::control()
+{
+    int d = ref - getPos();
+    if(d > prec)
     {
-        m->forward();
-        m->time = timeOut;
+        forward();
+        time = timeOut;
+        if(state < 10000) state++;
+        else if(rate < 20) onBlock(this);
     }
-    else if(d < -m->prec)
+    else if(d < -prec)
     {
-        m->reverse();
-        m->time = timeOut;
+        reverse();
+        time = timeOut;
+        if(state > -10000) state--;
+        else if(rate > -20) onBlock(this);
     }
     else
     {
-        m->stop();
-        if(m->time > 0) m->time--;
+        stop();
+        if(time > 0) time--;
+        state -= state >> 3;
     }
-    return m->time;
+    return time;
 }
 
 int ctlHold(Motor * m)
@@ -281,7 +291,7 @@ void allStop()
     for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
     {
         m->stop();
-        m->ref = getMotorPos(m);
+        m->ref = m->getPos();
     }
     cmdSrc = commands;
     cmdDst = commands;
@@ -313,7 +323,7 @@ Command * moveTo(Command * c)
             if(!(mask & 0x4)) pos.Y = pp.Y;
             if(!(mask & 0x8)) pos.Z = pp.Z;
         }
-        XYZmoveTo(pos.X, pos.Y, pos.Z);
+        if(!XYZmoveTo(pos.X, pos.Y, pos.Z)) out.log("\nWrong XYZ ");
     } 
     else if(int m = mask & 0x9) // rz
     {
@@ -324,8 +334,9 @@ Command * moveTo(Command * c)
             if(!(m & 0x1)) pos.R = pp.R;
             if(!(m & 0x8)) pos.Z = pp.Z;
         }
-        RZmoveTo(pos.R, pos.Z);
+        if(!RZmoveTo(pos.R, pos.Z)) out.log("\nWrong RZ ");
     }
+    delay = ticks + 10;
     return c;
 }
 
@@ -368,11 +379,11 @@ void ctlLoop()
 {
     int notReady = 0;
     if(motorsEnabled) for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
-            notReady |= ctlMotor(m);
+            notReady |= m->control();
     if(hold)
         notReady |= ctlHold(motors + 5);
     else
-        if(motorsEnabled) notReady |= ctlMotor(motors + 5);
+        if(motorsEnabled) notReady |= motors[5].control();
 
     if(motorsEnabled && !notReady) runCmd();
 }
