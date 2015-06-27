@@ -34,9 +34,10 @@ const char * commit()
     {
     case 0: return 0;
     case 1:
+    case 2:
         pc->axis = 0;
         pc = params;
-        if(!pushCommand(params)) out.log("\nUnable to send command");
+        if(!pushCommand(command, params)) out.log("\nUnable to send command");
     }
     command = 0;
     out.log(")");
@@ -53,7 +54,8 @@ const char * list(const char * cmd)
 {
     out.log("\nList:");
     for(Command * p = program; p->axis; p++)
-        if(p->axis != nextCmd)
+    { // TODO: Написать LIN или PTP
+        if(p->axis > endCmd)
         {
             char buf[20];
             sprintf(buf, " %c%.1f", axisNames[p->axis - axes] + ('A' - 'a'), p->pos);
@@ -61,6 +63,7 @@ const char * list(const char * cmd)
         }
         else
             out.log("; ");
+    }
     return 0;
 }
 
@@ -77,7 +80,7 @@ const char * pop(const char * cmd)
     Command * dp = program;
     while(dp->axis) dp++; // *dp = 0;
     dp--; // *dp = ;
-    while(dp-- > program) if(dp->axis == nextCmd)
+    while(dp-- > program) if(dp->axis < endCmd)
     {
         dp++;
         dp->axis = 0;
@@ -127,7 +130,7 @@ const char * save(const char * cmd)
         out.log("\nNothing to save");
         return 0;
     }
-    (dstPtr++)->axis = nextCmd;
+    (dstPtr++)->axis = (Axis *)(command ? command : 1);
     char buf[20];
     sprintf(buf, "\nProgram size: %d ", dstPtr - program);
     out.log(buf);
@@ -216,14 +219,14 @@ const char * on(const char * cmd)
 const char * get(const char * cmd)
 {
     Command c[2] = {{axisH, 100.0}, {0}};
-    pushCommand(c);
+    pushCommand(1, c);
     return 0;
 }
 
 const char * put(const char * cmd)
 {
     Command c[2] = {{axisH, 0.0}, {0}};
-    pushCommand(c);
+    pushCommand(1, c);
     return 0;
 }
 
@@ -250,6 +253,13 @@ const char * ptp(const char * cmd)
     return 0;
 }
 
+const char * lin(const char * cmd)
+{
+    out.log("\nLIN(");
+    command = 2;
+    return 0;
+}
+
 const char * setZero(const char * cmd)
 {
     noZero = 0x3F;
@@ -268,6 +278,7 @@ const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
     if(!strcmp(cmd, "ptp")) method = ptp;
+    else if(!strcmp(cmd, "lin")) method = lin;
     else if(!strcmp(cmd, "go")) method = go;
     else if(!strcmp(cmd, "list")) method = list;
     else if(!strcmp(cmd, "off")) method = off;

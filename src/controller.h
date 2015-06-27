@@ -54,7 +54,9 @@ extern volatile int ticks;
 #define axisX (axes + 8)
 #define axisY (axes + 9)
 #define axisZ (axes + 10)
-#define nextCmd ((Axis *) 1)
+#define ptpCmd ((Axis *) 1)
+#define linCmd ((Axis *) 2)
+#define endCmd ((Axis *) 3)
 
 void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
@@ -74,5 +76,5 @@ void motorsOn(void);
 
 void ctlLoop();
 char zero(char noZero);
-bool pushCommand(Command * cmd);
+bool pushCommand(int type, Command * cmd);
 void allStop();

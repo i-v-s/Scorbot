@@ -244,7 +244,7 @@ int ctlHold(Motor * m)
 Command commands[64];
 Command * volatile cmdSrc = commands, * volatile cmdDst = commands;
 
-bool pushCommand(Command * cmd)
+bool pushCommand(int type, Command * cmd)
 {
     int len = 0;
     for(Command * t = cmd; t->axis; t++) len++;
@@ -279,7 +279,7 @@ bool pushCommand(Command * cmd)
         d += left;
         if(d >= commands + sizeof(commands) / sizeof(Command)) d = commands;
     }
-    d->axis = nextCmd;
+    d->axis = (Axis *)type;
     d++;
     if(d >= commands + sizeof(commands) / sizeof(Command)) d = commands;
     cmdDst = d;
@@ -302,7 +302,7 @@ Command * moveTo(Command * c)
 {
     RXYZ pos;
     int mask = 0; // "rxyz"
-    for( ; c->axis && c->axis != nextCmd; c++)
+    for( ; c->axis > endCmd; c++)
     {
         Axis * a = c->axis;
         if(a <= axisH) a->moveTo(c->pos);
@@ -344,7 +344,7 @@ void runCmd()
 {               // Читаем команду
     if(Command * cp = cmdPtr)  // из программы
     {
-        if(cp->axis == nextCmd) cp++;
+        if(cp->axis && cp->axis < endCmd) cp++;
         GPIOB->BSRR = 1 << 15; // Включаем сигнал выполнения
         cp = moveTo(cp);
         if(!cp->axis)
@@ -364,7 +364,7 @@ void runCmd()
         {
             Command * t = s++;
             if(s >= commands + sizeof(commands) / sizeof(Command)) s = commands;
-            if(t->axis == nextCmd) 
+            if(t->axis < endCmd)
                 break;
             else
                 *(bp++) = *t;
