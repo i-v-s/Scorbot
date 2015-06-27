@@ -169,11 +169,6 @@ void addTickHandler(void (* h) (void * obj), void * obj)
     thDst++;
 }
 
-void moveMotor(Motor * motor, int ref)
-{
-    motor->ref = ref;
-}
-
 char motorsEnabled = 1;
 
 void motorsOff(void)
@@ -200,29 +195,34 @@ void onBlock(Motor * m)
     m->ref = ref;
 }
 
-int Motor::control()
+int Motor::control(int l)
 {
     int d = ref - getPos();
-    if(d > prec)
+    bool f = d >  prec;
+    bool r = d < -prec;
+    
+    if(f || r)
     {
-        forward();
         time = timeOut;
-        if(state < 10000) state++;
-        else if(rate < 20) onBlock(this);
-    }
-    else if(d < -prec)
-    {
-        reverse();
-        time = timeOut;
-        if(state > -10000) state--;
-        else if(rate > -20) onBlock(this);
-    }
-    else
-    {
-        stop();
-        if(time > 0) time--;
-        state -= state >> 3;
-    }
+        if(l <= left()) // Работаем
+        {
+            if(f)
+            {
+                forward();
+                if(state < 10000) state++;
+                else if(rate < 20) onBlock(this);
+            }
+            else
+            {
+                reverse();
+                if(state > -10000) state--;
+                else if(rate > -20) onBlock(this);                
+            }
+            return time;
+        }
+    } else if(time > 0) time--;
+    stop();
+    state -= state >> 3;
     return time;
 }
 
@@ -301,6 +301,9 @@ void allStop()
 Command * moveTo(Command * c)
 {
     RXYZ pos;
+    int refs[sizeof(motors) / sizeof(Motor)], * rp = refs + sizeof(motors) / sizeof(Motor) - 1;
+    for(Motor * m = motors + sizeof(motors) / sizeof(Motor) - 1; m >= motors; m--) *(rp--) = m->ref;
+    
     int mask = 0; // "rxyz"
     for( ; c->axis > endCmd; c++)
     {
@@ -336,7 +339,10 @@ Command * moveTo(Command * c)
         }
         if(!RZmoveTo(pos.R, pos.Z)) out.log("\nWrong RZ ");
     }
-    delay = ticks + 10;
+    
+    rp = refs + sizeof(motors) / sizeof(Motor) - 1;
+    for(Motor * m = motors + sizeof(motors) / sizeof(Motor) - 1; m >= motors; m--) 
+        m->rDelta = LEFT_MAX / (m->ref - *(rp--));
     return c;
 }
 
@@ -378,12 +384,29 @@ void runCmd()
 void ctlLoop()
 {
     int notReady = 0;
-    if(motorsEnabled) for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
-            notReady |= m->control();
+    
+    if(motorsEnabled)
+    {
+        int leftSum = 0, count = 0;//minLeft = LEFT_MAX
+        //Motor * minMotor = 0;
+        for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++) if(m->time)
+        {
+            int left = m->left();
+            leftSum += left;
+            //if(left < minLeft){ minLeft = left; minMotor = m;}
+            count++;
+        }
+        if(count) leftSum /= count;
+            
+        for(Motor * m = motors; m < motors + sizeof(motors) / sizeof(Motor) - 1; m++)
+            //if(m->left() < leftSum) m->stop();
+            notReady |= m->control(leftSum - LEFT_PREC);
+    }
+    
     if(hold)
         notReady |= ctlHold(motors + 5);
     else
-        if(motorsEnabled) notReady |= motors[5].control();
+        if(motorsEnabled) notReady |= motors[5].control(0);
 
     if(motorsEnabled && !notReady) runCmd();
 }

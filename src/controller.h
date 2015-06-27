@@ -1,21 +1,27 @@
 #include "mx_gpio.h"
 
+#define LEFT_MAX 10000000
+#define LEFT_PREC 100
+
 typedef struct
 {
 //private:
     volatile int pos; // Текущая позиция (если не в timer)
+    int oldPos; // Предыдущая позиция (только для расчёта скорости)
     TIM_TypeDef * timer;
 //public:
     int prec; // Допуск позиционирования
     int ref; // Заданная позиция
+    int rDelta; // обратная разница между новой и старой позицией
     int time, state;
     volatile int rate; // Скорость
-    int oldPos; // Предыдущая позиция
     void (* forward)();
     void (* reverse)();
     void (* stop)();
-    int control();
+    int control(int l);
     inline int getPos() { return timer ? (int16_t)timer->CNT : pos;}
+    inline int left() { return (ref - getPos()) * rDelta;}
+    void moveTo(int to);
 } Motor;
 
 typedef struct
