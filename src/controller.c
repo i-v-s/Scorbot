@@ -132,7 +132,7 @@ void SysTick_Handler(void)
         int rate = m->rate;
         m->rate = rate - ((rate - d * SysTickFreq) >> 3);
     }
-    if(GPIOB->IDR & (1 << 14) && !cmdPtr)
+    if(!(GPIOB->IDR & (1 << 14)) && !cmdPtr)
     {
         inStart++;
         if(inStart >= 5)
@@ -142,7 +142,7 @@ void SysTick_Handler(void)
             inStart = 0;
         }
     }
-    if(GPIOB->IDR & (1 << 12) && cmdPtr)
+    if(!(GPIOB->IDR & (1 << 12)) && cmdPtr)
     {
         inHalt++;
         if(inHalt >= 5)
