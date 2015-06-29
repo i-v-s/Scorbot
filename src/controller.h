@@ -59,6 +59,7 @@ extern volatile int ticks;
 void initEncoder(Motor * motor, TIM_TypeDef * timer);
 void initMotor(Motor * motor, void (* forward)(), void (* reverse)(), void (* stop)());
 void setMotorPos(Motor * motor, int pos);
+Command * moveTo(Command * c);
 
 #ifdef __cplusplus
  extern "C" {

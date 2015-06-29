@@ -37,6 +37,12 @@ const char * commit()
         pc->axis = 0;
         pc = params;
         if(!pushCommand(params)) out.log("\nUnable to send command");
+        break;
+    case 5:
+        pc->axis = 0;
+        pc = params;
+        moveTo(params);
+        break;
     }
     command = 0;
     out.log(")");
@@ -250,6 +256,13 @@ const char * ptp(const char * cmd)
     return 0;
 }
 
+const char * ref(const char * cmd)
+{
+    out.log("\nREF(");
+    command = 5;
+    return 0;
+}
+
 const char * setZero(const char * cmd)
 {
     noZero = 0x3F;
@@ -268,6 +281,7 @@ const char * onSimple(const char * cmd)
 {
     char const *(* method)(const char * cmd) = 0;
     if(!strcmp(cmd, "ptp")) method = ptp;
+    else if(!strcmp(cmd, "ref")) method = ref;
     else if(!strcmp(cmd, "go")) method = go;
     else if(!strcmp(cmd, "list")) method = list;
     else if(!strcmp(cmd, "off")) method = off;
