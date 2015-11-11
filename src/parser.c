@@ -19,7 +19,7 @@ extern uint8_t noZero;
 int command = 0;
 Command params[10], * pc = params;
 
-Command * dstPtr = program;
+Command * dstPtr[4] = {program[0], program[1], program[2], program[3]};
 
 #pragma location=0x08002000 
 __no_init volatile unsigned short flashBuf[1024];
@@ -51,14 +51,14 @@ const char * commit()
 
 const char * go(const char * cmd)
 {
-    cmdPtr = program;
+    cmdPtr = program[programNo];
     return 0;
 }
 
 const char * list(const char * cmd)
 {
     out.log("\nList:");
-    for(Command * p = program; p->axis; p++)
+    for(Command * p = program[programNo]; p->axis; p++)
         if(p->axis != nextCmd)
         {
             char buf[20];
@@ -73,41 +73,41 @@ const char * list(const char * cmd)
 const char * clear(const char * cmd)
 {
     out.log("Cleared");
-    program->axis = 0;
-    dstPtr = program;
+    program[programNo]->axis = 0;
+    dstPtr[programNo] = program[programNo];
     return 0;
 }
 
 const char * pop(const char * cmd)
 {
-    Command * dp = program;
+    Command * dp = program[programNo];
     while(dp->axis) dp++; // *dp = 0;
     dp--; // *dp = ;
-    while(dp-- > program) if(dp->axis == nextCmd)
+    while(dp-- > program[programNo]) if(dp->axis == nextCmd)
     {
         dp++;
         dp->axis = 0;
-        dstPtr = dp;
+        dstPtr[programNo] = dp;
         break;
     }
     char buf[20];
-    sprintf(buf, "\nProgram size: %d ", dstPtr - program);
+    sprintf(buf, "\nProgram size: %d ", dstPtr[programNo] - program[programNo]);
     out.log(buf);
     return 0;
 }
 
 const char * save(const char * cmd)
 {
-    Command * dp = dstPtr;
-    if(dstPtr == program)
+    Command * dp = dstPtr[programNo];
+    if(dstPtr[programNo] == program[programNo])
         for(int x = 0; x < 7; x++) // Пишем всё
         {
             Axis * a = axes + x;
-            dstPtr->axis = a;
+            dstPtr[programNo]->axis = a;
             float pos = a->getPos(), ref = a->getRef();
             if(fabs(pos - ref) <= 2.0) pos = ref;
-            dstPtr->pos = pos;
-            dstPtr++;
+            dstPtr[programNo]->pos = pos;
+            dstPtr[programNo]++;
         }
     else
         for(int x = 0; x < 7; x++) // Пишем отличия
@@ -117,40 +117,43 @@ const char * save(const char * cmd)
             
             float pos = a->getPos(), ref = a->getRef();
             if(fabs(pos - ref) <= 2.0) pos = ref;
-            for(Command * p = dstPtr; p >= program; p--) if(p->axis == a)
+            for(Command * p = dstPtr[programNo]; p >= program[programNo]; p--) if(p->axis == a)
             {
                 if(fabs(p->pos - pos) > 2.0) // Отличается - надо записать отличия
                 {
-                    dstPtr->axis = a;
-                    dstPtr->pos = pos;
-                    dstPtr++;                    
+                    dstPtr[programNo]->axis = a;
+                    dstPtr[programNo]->pos = pos;
+                    dstPtr[programNo]++;                    
                 }
                 break;
             }
         }
-    if(dstPtr == dp)
+    if(dstPtr[programNo] == dp)
     {
         out.log("\nNothing to save");
         return 0;
     }
-    (dstPtr++)->axis = nextCmd;
+    (dstPtr[programNo]++)->axis = nextCmd;
     char buf[20];
-    sprintf(buf, "\nProgram size: %d ", dstPtr - program);
+    sprintf(buf, "\nProgram size: %d ", dstPtr[programNo] - program[programNo]);
     out.log(buf);
-    dstPtr->axis = 0;
+    dstPtr[programNo]->axis = 0;
     return 0;
 }
 
 const char * load(const char * cmd)
 {
-    Command * p = program;
-    for(Command * c = (Command *)flashBuf; c->axis; c++)
-        *(p++) = *c;
-    p->axis = 0;
-    dstPtr = p;
-    char buf[20];
-    sprintf(buf, "\nProgram size: %d ", p - program);
-    out.log(buf);
+    for(int pn = 0; pn < PROGRAM_COUNT; pn++)
+    {
+        Command * p = program[pn];
+        for(Command * c = ((Command *)flashBuf) + PROGRAM_SIZE * pn; c->axis; c++)
+            *(p++) = *c;
+        p->axis = 0;
+        dstPtr[pn] = p;
+        char buf[20];
+        sprintf(buf, "\nProgram(%d) size: %d ", pn, p - program[pn]);
+        out.log(buf);
+    }
     return 0;
 }
 
@@ -186,16 +189,18 @@ const char * flash(const char * cmd)
     }
 
     FLASH->CR |= FLASH_CR_PG;
-
-    Command * p = program;
-    for(; p->axis; p++);
-    p++;
-    volatile unsigned short * fb = flashBuf;
-    for(unsigned short * pp = (unsigned short *)program; pp < (unsigned short *)p; pp++)
+    for(int pn = 0; pn < PROGRAM_COUNT; pn++)
     {
-        *(fb++) = *pp;
-        while (!(FLASH->SR & FLASH_SR_EOP));
-        FLASH->SR = FLASH_SR_EOP;
+        Command * p = program[pn];
+        for(; p->axis; p++);
+        p++;
+        volatile unsigned short * fb = flashBuf + sizeof(Command) / sizeof(*flashBuf) * PROGRAM_SIZE * pn;
+        for(unsigned short * pp = (unsigned short *)program; pp < (unsigned short *)p; pp++)
+        {
+            *(fb++) = *pp;
+            while (!(FLASH->SR & FLASH_SR_EOP));
+            FLASH->SR = FLASH_SR_EOP;
+        }
     }
     FLASH->CR &= ~(FLASH_CR_PG);
     return 0;
@@ -328,6 +333,10 @@ const char * onComplex(const char * name, const char * data)
     {
         doCount = atoi(data);
         return 0;
+    }
+    if(!strcmp(name, "prg"))
+    {
+        programNo = atoi(data);
     }
     return "Unknown name";
 }

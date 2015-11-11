@@ -34,9 +34,13 @@ typedef struct
     float pos;
 } Command;
 
-extern Command program[64];
+#define PROGRAM_COUNT 4
+#define PROGRAM_SIZE 64
+
+extern Command program[PROGRAM_COUNT][PROGRAM_SIZE];
 extern Command * volatile cmdPtr;
 extern int doCount;
+extern int programNo;
 
 extern Motor motors[6];
 extern Axis axes[11];

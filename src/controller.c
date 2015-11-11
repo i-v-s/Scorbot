@@ -111,9 +111,10 @@ struct TickHandler
 
 int inStart = 0, inHalt = 0;
 
-Command program[64] = {0};
+Command program[PROGRAM_COUNT][PROGRAM_SIZE] = {0};
 Command * volatile cmdPtr = 0;
 int doCount = 0;
+int programNo = 0;
 int delay = 0;
 
 #ifndef _TEST_
@@ -137,8 +138,8 @@ void SysTick_Handler(void)
         inStart++;
         if(inStart >= 5)
         {
-            if(!program->axis) load(0);
-            cmdPtr = program;
+            if(!program[programNo]->axis) load(0);
+            cmdPtr = program[programNo];
             inStart = 0;
         }
     }
@@ -349,7 +350,7 @@ void runCmd()
         cp = moveTo(cp);
         if(!cp->axis)
         {
-            if(doCount) {cp = program; doCount--;}
+            if(doCount) {cp = program[programNo]; doCount--;}
             else cp = 0;
         }
         cmdPtr = cp;
